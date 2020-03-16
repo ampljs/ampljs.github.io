@@ -178,7 +178,7 @@ const AMPLJS = (function(){
             if(_parameters != undefined) {
                 let str = '';
 
-                str += '\n\nset OPTIMIZED := \n';
+                str += '\n\nset VARIABLES := \n';
 
                 for(let k in _parameters) if(_parameters[k].category == 'optimized') str += `\t${k} \n`;
                 str = str.substring(0, str.length - 2) + ';\n';
