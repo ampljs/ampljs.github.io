@@ -1,0 +1,36 @@
+{
+  "name": "ampljs",
+  "version": "1.0.0",
+  "description": "Um gerador de código AMPL feito em Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaconsMorais/ampljs.github.io.git"
+  },
+  "keywords": [
+    "ampl",
+    "javascript",
+    "gerador",
+    "tradutor"
+  ],
+  "author": "Jacons Morais",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JaconsMorais/ampljs.github.io/issues"
+  },
+  "homepage": "https://github.com/JaconsMorais/ampljs.github.io#readme",
+  "devDependencies": {
+    "deepmerge": "^4.2.2",
+    "fibers": "^4.0.2",
+    "nodemon": "^2.0.2",
+    "sass": "^1.26.2",
+    "sass-loader": "^8.0.2"
+  },
+  "dependencies": {
+    "codemirror": "^5.52.0",
+    "vuetify": "^2.2.15"
+  }
+}

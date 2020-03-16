@@ -1,0 +1,71 @@
+<!doctype html>
+
+<html lang="pt_BR">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css//codemirror.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+  <title>AMPLjs - Gerador de código AMPL.</title>
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="JMorais">
+
+</head>
+
+<body>
+  <div id="ampljs-app">
+    <v-container>
+      <v-row>
+        <h1>Gerador de código AMPL</h1>
+      </v-row>
+      <v-row>
+        <h5>Insira o código JSON e clique em traduzir</h3>
+      </v-row>
+    </v-container>
+    <v-container>
+
+      <v-row>
+        <v-col
+        cols="12"
+        sm="12"
+        md="6"
+        lg="6"
+        xl="6">
+        <h6 class="ml-4">JSON:</h4>
+          <v-card outlined>
+            <textarea id="input-textarea"></textarea>
+          </v-card>
+        </v-col>
+        <v-col
+        cols="12"
+        sm="12"
+        md="6"
+        lg="6"
+        xl="6">
+        <h6 class="ml-4">AMPL:</h4>
+          <v-card outlined>
+            <textarea id="output-textarea"></textarea>
+          </v-card>
+
+        </v-col>
+      </v-row>
+    </v-container>
+    <v-container>
+      <v-row>
+        <v-btn class="mx-auto" v-on:click="translate" text large color="primary" > Traduzir</v-btn>
+      </v-row>
+    </v-container>
+  </div>
+</body>
+<script defer src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<script defer src="scripts//codemirror.js"></script>
+<script defer src="scripts/ampljs.js"></script>
+<script defer src="scripts/index.js"></script>
+<script defer src="scripts/string-codebase.js"></script>
+
+
+</html>
