@@ -15,6 +15,13 @@ const AMPLJS = (function(){
                 return false;
             }
         },
+        getGraph: () => {
+            return {
+            nodes : _nodes,
+            flows : _flows,
+            resources : _resources,
+            parameters : _parameters
+        }},
         loadModelJSONObject:(json) => {
             modelJSONObject = JSON.parse(json);
             modelJSONString = json;
@@ -24,9 +31,9 @@ const AMPLJS = (function(){
                 _parameters = {};
 
                 const n = modelJSONObject['simulationData']['parameters']
+                const systemParameters = modelJSONObject['simulationData']['systemParameters']
 
-                for(let k in n) _parameters[k] = new Parameter(k, getParameterCategory(k), n[k], 0, n[k] * 2);
-                    
+                for(let k in n) _parameters[k] = new Parameter(k, getParameterCategory(k), systemParameters[k].std, systemParameters[k].min, systemParameters[k].max, n[k]);
                 
             }
             else console.error('Você precisa carregar o json primeiro com AMPLJS.loadJSONObject(json).');
@@ -37,7 +44,7 @@ const AMPLJS = (function(){
                 const n = modelJSONObject['simulationData']['graph']['nodes'];
                 for(let k in n) {
                     let _ = removeUselessCharsInNodeName(k, 'node');
-                    _nodes[_] = new Node(_, NodeTypes[n[k]['type']], n[k]['stages'], n[k]['duration']);
+                    _nodes[_] = new Node(_, NodeTypes[n[k]['type']], n[k]['stages'], n[k]['duration'], n[k]['formula']);
                 }
 
             }
@@ -51,7 +58,7 @@ const AMPLJS = (function(){
                     let _  = removeUselessCharsInNodeName(k, 'flow');
                     const {bottom, top} = getTopAndBottomNodesOfFlow(_, _nodes);
 
-                    _flows[_] = new Flow(FlowTypes[n[k]['type']], bottom, top , '', '', '', removeSpacesFromResourceName(n[k]['resource']['name']));
+                    _flows[_] = new Flow(FlowTypes[n[k]['type']], bottom, top , n[k]['factor'], n[k]['qty'], n[k]['day'], removeSpacesFromResourceName(n[k]['resource']['name']), n[k]['formula']);
                 }
 
             }
@@ -286,16 +293,25 @@ class Node{
     /*String */ type
     /*String */ stage
     /*String */ duration   //Fórmula de duration
-    constructor(name, type, stage, duration){
+    /**String */formula
+    constructor(name, type, stage, duration, formula){
         this.name = name;
         this.type = type;
         this.stage = stage;
         this.duration = duration;
+        this.formula = formula;
     }
  
     toStringDuration(platform){}
     toString(platform){}
     toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
+    toStringFormulaWithResults = (_params) => {
+        const names = this.formula.split(/[^A-Za-z]/g).filter((e) => e.length > 0)
+        let formula = this.formula
+        for(let n of names) formula =  formula.replace(n, _params[n] != undefined ? _params[n].toStringNameOrValue() : n)   //Os Parâmetros podem aparecer repetidos em uma fórmula?
+
+        return formula;
+    }
 }
 
 class Flow{
@@ -306,41 +322,53 @@ class Flow{
     /*String*/factor
     /*String*/qty    //Inclui inicialmente só para caso de armazenarmos algum valor 'standard' da variável
     /*String*/day      //Mesmo caso descrito acima
+    /**String */formula
     /*Resource*/ resource
  
-    constructor(type, bottom, top, factor, qty, day, resource){
+    constructor(type, bottom, top, factor, qty, day, resource, formula){
         this.type = type;
         this.top = top;
         this.bottom = bottom;
         this.factor = factor;
         this.qty = qty;
         this.day = day;
-        this.resource = resource
+        this.resource = resource;
+        this.formula = formula;
     }
  
     toStringFactor(platform){}    //Fórmulas para a plataforma especificada
     toString(platform){}             //top.name   bottom.name
     toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
+    toStringFormulaWithResults = (_params) => {
+        const names = this.formula.split(/[^A-Za-z]/g).filter((e) => e.length > 0)
+        let formula = this.formula
+        for(let n of names) formula =  formula.replace(n, _params[n] != undefined ? _params[n].toStringNameOrValue() : n)
+
+        return formula;
+    }
 }
 
 class Parameter{
     /*String*/ uid
     /*String*/ name
     /*String*/ category    /*FIXED, CALCULATED, OPTIMIZED */
+    /*String*/val
     /*String*/ std
     /*String*/ min
     /*String*/ max
  
-    constructor(name, category, std, min, max){
+    constructor(name, category, std, min, max, val){
         this.name = name;
-        this.category = category;
+        this.category = max == min ?  'fixed' : category;
         this.std = std;
         this.min = min;
         this.max = max;
+        this.val = val;
     }
     toString(platform){}
     isCategory(category){}
-    toStringByCat = (category) => this.category == category ? `\n\t${this.name}\t${this.std},` : ``
+    toStringByCat = (category) => this.category == category ? `\n\t${this.name}\t${this.val},` : ``
+    toStringNameOrValue = () => this.category == 'fixed' ? `${this.val}` : `val['${this.name}']`
 }
 
 class Indicator{
