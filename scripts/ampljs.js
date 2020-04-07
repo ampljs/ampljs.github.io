@@ -316,7 +316,38 @@ const AMPLJS = (function(){
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
 
             return '';
-        }
+        },
+        printFactorsSubject: () => {
+            if(_flows != undefined){
+                let str = '\n\nmodel;';
+                let i = 0;
+
+                for(let f in _flows) str += `\nsubject to Factor${i++}: factor['${_flows[f].bottom.name}', '${_flows[f].top.name}'] = ${_flows[f].toStringFormulaWithResults()};`;
+
+                str += '\n\ndata;';
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Flows com AMPLJS.loadFlows()');
+
+            return '';
+        },
+        printDurationsSubject: () => {
+            if(_nodes != undefined){
+                let str = '\n\nmodel;';
+                let i = 0;
+
+                for(let n in _nodes) str += `\nsubject to Duration${i++}: duration['${_nodes[n].name}'] = ${_nodes[n].toStringFormulaWithResults()};`;
+
+                str += '\n\ndata;';
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Flows com AMPLJS.loadFlows()');
+
+            return '';
+        },
+        
         
     };
 })();
@@ -340,6 +371,7 @@ class Node{
     toString(platform){}
     toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
     toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+        _params = _params || AMPLJS.getGraph().parameters
         const param = _params[name]
 
         if(param != undefined)
@@ -376,6 +408,7 @@ class Flow{
     toString(platform){}             //top.name   bottom.name
     toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
     toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+        _params = _params || AMPLJS.getGraph().parameters
         const param = _params[name]
 
         if(param != undefined)

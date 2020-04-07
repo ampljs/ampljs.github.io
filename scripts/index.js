@@ -42,7 +42,8 @@ function _translate(){
         amplCode += AMPLJS.printSums();
         amplCode += AMPLJS.printCalculatedParameters();
         amplCode += AMPLJS.printMinMaxParameters();
-
+        amplCode += AMPLJS.printFactorsSubject();
+        amplCode += AMPLJS.printDurationsSubject();
         OutputTextArea.setValue(amplCode);
     }
 }

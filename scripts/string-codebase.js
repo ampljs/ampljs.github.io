@@ -28,7 +28,7 @@ param Resource{FLOWS} in RESOURCES symbolic;
 param Property{RESOURCES, TERMS} in PARAMETERS;
 param Indicator in INDICATORS;
 param IndicatorSign in {-1, 1};
-param Cycle;
+param Cycle := 365;
 param TermMethod{INDICATORS, TERMS} in PARAMETERS symbolic;
 param TermParm/*{INDICATORS, TERMS}*/ in INDICATORS symbolic;
 param Fixed{FIXED};
@@ -89,7 +89,7 @@ subject to FlowQty{(n,j) in FLOWS}:
 		else Sign[n, j] * sum{(i, n) in FLOWS} (qty[i, n] * (Sign[i, n] + Sign[n, j] / 2))
 		)	
 		else Infinity);
-		
+
 subject to OnlyIntegerDurations {n in NODES}: round(duration[n]) = duration[n];	
 
 subject to OnlyPositiveFactors{(i,j) in FLOWS}: (if factor[i,j] > 0 then 0 else 1) = 0;
