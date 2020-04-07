@@ -51,7 +51,7 @@ const AMPLJS = (function(){
                     let _  = removeUselessCharsInNodeName(k, 'flow');
                     const {bottom, top} = getTopAndBottomNodesOfFlow(_, _nodes);
 
-                    _flows[_] = new Flow('', bottom, top , '', '', '', removeSpacesFromResourceName(n[k]['resource']['name']));
+                    _flows[_] = new Flow(FlowTypes[n[k]['type']], bottom, top , '', '', '', removeSpacesFromResourceName(n[k]['resource']['name']));
                 }
 
             }
@@ -103,20 +103,7 @@ const AMPLJS = (function(){
                 str += '\n\nset FLOWS := \n';
 
                 for(let k in _flows) str += `\t(${_flows[k].bottom.name}, ${_flows[k].top.name} ),\n`;
-                str = str.substring(0, str.length - 2) + ';\n';
-                return str;
-            }
-            else console.error('Você precisa carregar os Flows com AMPLJS.loadFlows()');
-            return '';
-        },
-        printSigns:() => {
-            if(_flows != undefined) {
-                let str = '';
-
-                str += '\n\nparam Sign := \n';
-
-                for(let k in _flows) str += `\t${_flows[k].bottom.name} ${_flows[k].top.name}, ,\n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Flows com AMPLJS.loadFlows()');
@@ -129,7 +116,7 @@ const AMPLJS = (function(){
                 str += '\n\nset RESOURCES := \n';
 
                 for(let k in _resources) str += `\t${k} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Resources com AMPLJS.loadResources()');
@@ -142,7 +129,7 @@ const AMPLJS = (function(){
                 str += '\n\nset PARAMETERS := \n';
 
                 for(let k in _parameters) str += `\t${k} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
@@ -155,7 +142,7 @@ const AMPLJS = (function(){
                 str += '\n\nset FIXED := \n';
 
                 for(let k in _parameters) if(_parameters[k].category == 'fixed') str += `\t${k} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
@@ -168,7 +155,7 @@ const AMPLJS = (function(){
                 str += '\n\nset CALCULATED := \n';
 
                 for(let k in _parameters) if(_parameters[k].category == 'calculated') str += `\t${k} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
@@ -181,7 +168,7 @@ const AMPLJS = (function(){
                 str += '\n\nset VARIABLES := \n';
 
                 for(let k in _parameters) if(_parameters[k].category == 'optimized') str += `\t${k} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
@@ -193,11 +180,97 @@ const AMPLJS = (function(){
 
                 str += '\n\nparam Fixed := \n';
 
-                for(let k in _parameters) if(_parameters[k].category == 'fixed') str += `\t${k}\t${_parameters[k]['std']} \n`;
-                str = str.substring(0, str.length - 2) + ';\n';
+                for(let k in _parameters) str +=  _parameters[k].toStringByCat('fixed');
+                str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
+            return '';
+        },
+        printSigns: () => {
+            if(_flows != undefined){
+                let str = '';
+                str += '\n\nparam Sign := \n';
+
+                for(let f in _flows) str += _flows[f].toStringSign();
+
+                str = replaceInvalidCharsWithSemicolon(str);
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Flows com AMPLJS.loadFlows()');
+
+            return '';
+
+        },
+        printBalances:() => {
+            if(_nodes != undefined){
+                let str = '';
+                str += '\n\nparam IsBalance default 0 \n';
+                const strSize = str.length;
+
+                for(let n in _nodes) str += _nodes[n].toStringType('balance');
+
+                if(str.length > strSize)
+                    str = str.insertAt(':=\n', strSize)
+
+                str = replaceInvalidCharsWithSemicolon(str);
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Nodes com AMPLJS.loadNodes()');
+
+            return '';
+        },
+        printSums:() => {
+            if(_nodes != undefined){
+                let str = '';
+                str += '\n\nparam IsSum default 0';
+                const strSize = str.length;
+
+                for(let n in _nodes) str += _nodes[n].toStringType('sum');
+
+                if(str.length > strSize)
+                    str = str.insertAt(':=\n', strSize)
+
+                str = replaceInvalidCharsWithSemicolon(str);
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Nodes com AMPLJS.loadNodes()');
+
+            return '';
+        },
+        printStations:() => {
+            if(_nodes != undefined){
+                let str = '';
+                str += '\n\nparam IsStation default 0 :=';
+                const strSize = str.length;
+
+                for(let n in _nodes) str += _nodes[n].toStringType('station');
+
+
+                str = replaceInvalidCharsWithSemicolon(str);
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Nodes com AMPLJS.loadNodes()');
+
+            return '';
+        },
+        printRoot:() => {
+            if(_nodes != undefined){
+                let str = '';
+                str += '\n\nparam IsRoot default 0 :=';
+
+                for(let n in _nodes) str += _nodes[n].name === removeUselessCharsInNodeName(modelJSONObject['simulationData']['graph']['root']) ? 
+                    `\n${_nodes[n]['name']}\t1;` 
+                    : '';
+
+                return str;
+            }
+            else console.error('Você precisa carregar os Nodes com AMPLJS.loadNodes()');
+
             return '';
         },
         translate:(input, output)=>{
@@ -222,6 +295,7 @@ class Node{
  
     toStringDuration(platform){}
     toString(platform){}
+    toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
 }
 
 class Flow{
@@ -246,7 +320,7 @@ class Flow{
  
     toStringFactor(platform){}    //Fórmulas para a plataforma especificada
     toString(platform){}             //top.name   bottom.name
-    sign(){}     //1 se type = treatment, -1 de type = production
+    toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
 }
 
 class Parameter{
@@ -266,6 +340,7 @@ class Parameter{
     }
     toString(platform){}
     isCategory(category){}
+    toStringByCat = (category) => this.category == category ? `\n\t${this.name}\t${this.std},` : ``
 }
 
 class Indicator{
@@ -307,7 +382,10 @@ const NodeTypes = {
     'terminal_saida_tratamento': 'terminal',
     'terminal_entrada_producao': 'terminal',
     'est_reuso': 'station',
-    'est_producao': 'station'               //Estão faltando tipos no json.
+    'est_producao': 'station',               //Ainda está faltando tipos?
+    'est_tratamento': 'station',
+    'soma_tratamento': 'sum',
+    'balanço': 'balance'
 }
 
 const FlowTypes = {
@@ -364,4 +442,24 @@ function getParameterCategory(parameterName){
         default:
             return 'fixed';
     }
+}
+
+const  replaceInvalidCharsWithSemicolon = (str) => {
+    let c = str.slice(-1);
+    const invalidChars = ['', ' ', ',', '\n']
+
+    while(isInvalidChar(c, invalidChars)) {
+        str = str.substring(0, str.length - 1)
+        c = str.slice(-1);
+    }
+    return str + ';';
+}
+
+const isInvalidChar = (char = '', invalidChars = []) => invalidChars.includes(char)
+    
+
+
+
+String.prototype.insertAt = function(element, position){ 
+    return this.replace(new RegExp(`(?<=^.{${position}})`), element);
 }

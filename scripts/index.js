@@ -35,6 +35,11 @@ function _translate(){
         amplCode += AMPLJS.printOptimized();
         amplCode += AMPLJS.printFixedValues();
         amplCode += AMPLJS.printFlowsResource();
+        amplCode += AMPLJS.printSigns();
+        amplCode += AMPLJS.printBalances();
+        amplCode += AMPLJS.printRoot();
+        amplCode += AMPLJS.printStations();
+        amplCode += AMPLJS.printSums();
 
         OutputTextArea.setValue(amplCode);
     }
