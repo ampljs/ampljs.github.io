@@ -370,7 +370,7 @@ class Node{
     toStringDuration(platform){}
     toString(platform){}
     toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
-    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
         _params = _params || AMPLJS.getGraph().parameters
         const param = _params[name]
 
@@ -407,7 +407,7 @@ class Flow{
     toStringFactor(platform){}    //Fórmulas para a plataforma especificada
     toString(platform){}             //top.name   bottom.name
     toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
-    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
         _params = _params || AMPLJS.getGraph().parameters
         const param = _params[name]
 
@@ -447,7 +447,7 @@ class Parameter{
         if (this.category == 'calculated') return this.toStringFormula()
         return `val['${this.name}']`
     }
-    toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+    toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
         _params = _params || AMPLJS.getGraph().parameters
         const param = _params[name]
 
