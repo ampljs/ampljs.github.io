@@ -32,8 +32,10 @@ const AMPLJS = (function(){
 
                 const n = modelJSONObject['simulationData']['parameters']
                 const systemParameters = modelJSONObject['simulationData']['systemParameters']
+                const calculatedParameters = modelJSONObject['simulationData']['calculatedParameters']
 
-                for(let k in n) _parameters[k] = new Parameter(k, getParameterCategory(k), systemParameters[k].std, systemParameters[k].min, systemParameters[k].max, n[k]);
+                for(let k in n) _parameters[k] = new Parameter(k, getParameterCategory({name: k, min: systemParameters[k].min, max: systemParameters[k].max}, ['CONFINAMENTO', 'PERDAS_CRIA', 'AGUAS', 'INICIO_AGUAS']), systemParameters[k].std, systemParameters[k].min, systemParameters[k].max, n[k]);
+                for(let k in calculatedParameters) _parameters[k] = new Parameter(k, 'calculated', 1, 1, 2, 1, calculatedParameters[k])
                 
             }
             else console.error('Você precisa carregar o json primeiro com AMPLJS.loadJSONObject(json).');
@@ -58,7 +60,7 @@ const AMPLJS = (function(){
                     let _  = removeUselessCharsInNodeName(k, 'flow');
                     const {bottom, top} = getTopAndBottomNodesOfFlow(_, _nodes);
 
-                    _flows[_] = new Flow(FlowTypes[n[k]['type']], bottom, top , n[k]['factor'], n[k]['qty'], n[k]['day'], removeSpacesFromResourceName(n[k]['resource']['name']), n[k]['formula']);
+                    _flows[_] = new Flow(FlowTypes[n[k]['type']], bottom, top , n[k]['factor'], n[k]['qty'], n[k]['day'], removeSpecialCharsFromResourceName(n[k]['resource']['name']), n[k]['formula']);
                 }
 
             }
@@ -69,7 +71,7 @@ const AMPLJS = (function(){
                 const n = modelJSONObject['simulationData']['resources'];
                 _resources = {};
             for(let k in n){
-                const _ = removeSpacesFromResourceName(k);
+                const _ = removeSpecialCharsFromResourceName(k);
                 _resources[_] = new Resource(_, n[k]['category'], n[k]['unit'])
             }
 
@@ -80,7 +82,7 @@ const AMPLJS = (function(){
             if(_nodes != undefined) {
                 let str = '';
 
-                str += 'set NODES := \n';
+                str += '\n\nset NODES := \n';
 
                 for(let k in _nodes) str += `${k} `;
 
@@ -283,6 +285,38 @@ const AMPLJS = (function(){
         translate:(input, output)=>{
             //output.setValue(FIXED_MODEL_STRING);
         },
+        printCalculatedParameters: () => {
+            if(_parameters != undefined){
+                let str = '';
+                str += '\n\nmodel;\n';
+
+                for(let n in _parameters) {
+                    if(_parameters[n].category == 'calculated')
+                        str += `\nsubject to ValCalculated${_parameters[n].name} { c in CALCULATED: c = '${_parameters[n].name}'}: val[c] = ${_parameters[n].toStringFormula(_parameters)};`;
+                }
+            
+                str += '\n\ndata;\n'
+                return str;
+            }
+            else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
+
+            return '';
+        },
+        printMinMaxParameters: () => {
+            if(_parameters != undefined){
+                let str = '\n\nparam:\tMin,\tMax,\tStd :=\n';
+
+                for(let n in _parameters) {
+                    if(_parameters[n].category == 'optimized')
+                        str += `\n${_parameters[n].name}\t${_parameters[n].min}\t${_parameters[n].max}\t${_parameters[n].val},`;
+                }
+                str = replaceInvalidCharsWithSemicolon(str);
+                return str;
+            }
+            else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
+
+            return '';
+        }
         
     };
 })();
@@ -305,13 +339,15 @@ class Node{
     toStringDuration(platform){}
     toString(platform){}
     toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
-    toStringFormulaWithResults = (_params) => {
-        const names = this.formula.split(/[^A-Za-z]/g).filter((e) => e.length > 0)
-        let formula = this.formula
-        for(let n of names) formula =  formula.replace(n, _params[n] != undefined ? _params[n].toStringNameOrValue() : n)   //Os Parâmetros podem aparecer repetidos em uma fórmula?
+    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+        const param = _params[name]
 
-        return formula;
-    }
+        if(param != undefined)
+            return param.toStringNameOrValue()          //Os parametros podem aparecer repetidos em uma fórmula?
+        
+
+        return name;
+    })
 }
 
 class Flow{
@@ -339,13 +375,16 @@ class Flow{
     toStringFactor(platform){}    //Fórmulas para a plataforma especificada
     toString(platform){}             //top.name   bottom.name
     toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
-    toStringFormulaWithResults = (_params) => {
-        const names = this.formula.split(/[^A-Za-z]/g).filter((e) => e.length > 0)
-        let formula = this.formula
-        for(let n of names) formula =  formula.replace(n, _params[n] != undefined ? _params[n].toStringNameOrValue() : n)
+    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+        const param = _params[name]
 
-        return formula;
-    }
+        if(param != undefined)
+            return param.toStringNameOrValue()
+        
+
+        return name;
+    })   
+    
 }
 
 class Parameter{
@@ -356,19 +395,34 @@ class Parameter{
     /*String*/ std
     /*String*/ min
     /*String*/ max
+    /*String */formula
  
-    constructor(name, category, std, min, max, val){
+    constructor(name, category, std, min, max, val, formula){
         this.name = name;
         this.category = max == min ?  'fixed' : category;
         this.std = std;
         this.min = min;
         this.max = max;
         this.val = val;
+        this.formula = formula;
     }
     toString(platform){}
     isCategory(category){}
     toStringByCat = (category) => this.category == category ? `\n\t${this.name}\t${this.val},` : ``
-    toStringNameOrValue = () => this.category == 'fixed' ? `${this.val}` : `val['${this.name}']`
+    toStringNameOrValue = () => {
+        if (this.category == 'fixed') return `${this.val}`  
+        if (this.category == 'calculated') return this.toStringFormula()
+        return `val['${this.name}']`
+    }
+    toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{3,20}/g, (name) => {
+        _params = _params || AMPLJS.getGraph().parameters
+        const param = _params[name]
+
+        if(param != undefined)
+            return param.toStringNameOrValue()
+
+        return name;
+    }) : ''
 }
 
 class Indicator{
@@ -409,11 +463,11 @@ const NodeTypes = {
     'terminal_saida_producao': 'terminal',
     'terminal_saida_tratamento': 'terminal',
     'terminal_entrada_producao': 'terminal',
-    'est_reuso': 'station',
+    'est_reuso': 'balance',
     'est_producao': 'station',               //Ainda está faltando tipos?
     'est_tratamento': 'station',
     'soma_tratamento': 'sum',
-    'balanço': 'balance'
+    'soma_producao': 'sum'
 }
 
 const FlowTypes = {
@@ -453,23 +507,33 @@ function getTopAndBottomNodesOfFlow(flowString, _nodes){
     };
 }
 
-function removeSpacesFromResourceName(resourceName){
-    return resourceName.replace(/ /g, '_');
+function removeSpecialCharsFromResourceName(str){
+    var map = {
+        '_' : ' ',
+        'a' : 'á|à|ã|â|À|Á|Ã|Â',
+        'e' : 'é|è|ê|É|È|Ê',
+        'i' : 'í|ì|î|Í|Ì|Î',
+        'o' : 'ó|ò|ô|õ|Ó|Ò|Ô|Õ',
+        'u' : 'ú|ù|û|ü|Ú|Ù|Û|Ü',
+        'c' : 'ç|Ç',
+        'n' : 'ñ|Ñ'
+    };
+    
+    //str = str.toLowerCase();
+    
+    for (var pattern in map) {
+        str = str.replace(new RegExp(map[pattern], 'g'), pattern);
+    };
+
+    return str;
 };
 
-function getParameterCategory(parameterName){
-    switch(parameterName){
-        case 'PESO_cerquilha_AREA':
-            return 'calculated';
-            break;
-        case 'PRECO_cerquilha_AREA':
-        case 'PRECO_cerquilha_PRIMIPARAS_PARIDAS':
-        case 'PRECO_cerquilha_NULIPARAS':
-                return 'optimized';
-            break;
-        default:
-            return 'fixed';
-    }
+function getParameterCategory(p, optimizedParameters){
+    if(p.min == p.max) return 'fixed'
+
+    if(optimizedParameters.includes(p.name)) return 'optimized'
+
+    return 'fixed'
 }
 
 const  replaceInvalidCharsWithSemicolon = (str) => {

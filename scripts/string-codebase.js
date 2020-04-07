@@ -37,10 +37,10 @@ param IsStation{NODES} binary;
 param IsSum{NODES} binary;
 param IsBalance{NODES} binary;
 param Sign{FLOWS} in {-1,1};
-param FactorToVal{FLOWS} in PARAMETERS symbolic;
 
 
 var val {PARAMETERS};
+var variables{v in VARIABLES} default Std[v] >= Min[v] <= Max[v];
 var day{FLOWS};
 var factor{FLOWS} >= 0;
 var qty{FLOWS};
@@ -57,8 +57,7 @@ maximize Quantities: sum{(i, j) in FLOWS} (qty[i,j] + day[i,j]);
 
 
 subject to ValFixed{p in FIXED}: val[p] = Fixed[p];
-subject to ValOptimizedMin{p in VARIABLES}: val[p] >= Min[p];
-subject to ValOptimizedMax{p in VARIABLES}: val[p] <= Max[p];
+subject to ValOptimized{p in VARIABLES}: val[p] = variables[p];
 
 
 
@@ -90,9 +89,7 @@ subject to FlowQty{(n,j) in FLOWS}:
 		else Sign[n, j] * sum{(i, n) in FLOWS} (qty[i, n] * (Sign[i, n] + Sign[n, j] / 2))
 		)	
 		else Infinity);
-	
-subject to Factors{(i, j) in FLOWS}:
-	factor[i, j] = val[FactorToVal[i, j]];
+		
 subject to OnlyIntegerDurations {n in NODES}: round(duration[n]) = duration[n];	
 
 subject to OnlyPositiveFactors{(i,j) in FLOWS}: (if factor[i,j] > 0 then 0 else 1) = 0;

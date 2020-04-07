@@ -23,10 +23,10 @@ function _translate(){
         AMPLJS.loadFlows();
         AMPLJS.loadResources();
         AMPLJS.loadParameters();
-        //amplCode = FIXED_MODEL_STRING;
+        amplCode = FIXED_MODEL_STRING;
         amplCode += `
         data;`;
-        amplCode = AMPLJS.printNodes();
+        amplCode += AMPLJS.printNodes();
         amplCode += AMPLJS.printFlows();
         amplCode += AMPLJS.printResources();
         amplCode += AMPLJS.printParameters();
@@ -40,6 +40,8 @@ function _translate(){
         amplCode += AMPLJS.printRoot();
         amplCode += AMPLJS.printStations();
         amplCode += AMPLJS.printSums();
+        amplCode += AMPLJS.printCalculatedParameters();
+        amplCode += AMPLJS.printMinMaxParameters();
 
         OutputTextArea.setValue(amplCode);
     }
