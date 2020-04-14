@@ -376,7 +376,8 @@ class Node{
 
             return name;
         })
-        
+
+        formula = replaceExponentialOperator(formula)
         if(hasOnlyDigitsOnFormula(formula))
             formula = eval(formula)
 
@@ -420,7 +421,8 @@ class Flow{
 
             return name;
         })
-        
+
+        formula = replaceExponentialOperator(formula)
         if(hasOnlyDigitsOnFormula(formula))
             formula = eval(formula)
 
@@ -599,3 +601,5 @@ String.prototype.insertAt = function(element, position){
 const removeComments = (s) => s.replace(/(\/\*[^*]*\*\/)|(\/\/[^*]*)/g, '');
 
 const hasOnlyDigitsOnFormula = (formula) => typeof formula == 'string' ? formula.search(/[a-zA-Z_]/g) == -1 : false 
+
+const replaceExponentialOperator = (formula) => formula.replace('^', '**')
