@@ -15,7 +15,7 @@ const OutputTextArea = CodeMirror.fromTextArea(document.getElementById('output-t
 
 function _translate(){
     console.log('translating');
-    jsonCode = InputTextArea.getValue(separator = ' ').trim();
+    jsonCode = removeComments(InputTextArea.getValue(separator = ' ').trim());
     let amplCode = '';
     if(AMPLJS.isJSON(jsonCode)){
         AMPLJS.loadModelJSONObject(jsonCode);
@@ -24,8 +24,10 @@ function _translate(){
         AMPLJS.loadResources();
         AMPLJS.loadParameters();
         amplCode = FIXED_MODEL_STRING;
-        amplCode += `
-        data;`;
+        amplCode += AMPLJS.printFactorsSubject();
+        amplCode += AMPLJS.printDurationsSubject();
+        amplCode += AMPLJS.printCalculatedParameters();
+        amplCode += `\n\ndata;`;
         amplCode += AMPLJS.printNodes();
         amplCode += AMPLJS.printFlows();
         amplCode += AMPLJS.printResources();
@@ -40,10 +42,10 @@ function _translate(){
         amplCode += AMPLJS.printRoot();
         amplCode += AMPLJS.printStations();
         amplCode += AMPLJS.printSums();
-        amplCode += AMPLJS.printCalculatedParameters();
         amplCode += AMPLJS.printMinMaxParameters();
-        amplCode += AMPLJS.printFactorsSubject();
-        amplCode += AMPLJS.printDurationsSubject();
         OutputTextArea.setValue(amplCode);
+
+        Validator.checkNodes(JSON.parse(jsonCode)['simulationData'], amplCode)
+        Validator.checkFlows(JSON.parse(jsonCode)['simulationData'], amplCode)
     }
 }

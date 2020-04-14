@@ -111,7 +111,7 @@ const AMPLJS = (function(){
 
                 str += '\n\nset FLOWS := \n';
 
-                for(let k in _flows) str += `\t(${_flows[k].bottom.name}, ${_flows[k].top.name} ),\n`;
+                for(let k in _flows) str += `\t(${_flows[k].bottom.name}, ${_flows[k].top.name}),\n`;
                 str = replaceInvalidCharsWithSemicolon(str);
                 return str;
             }
@@ -215,13 +215,13 @@ const AMPLJS = (function(){
         printBalances:() => {
             if(_nodes != undefined){
                 let str = '';
-                str += '\n\nparam IsBalance default 0 \n';
+                str += '\n\nparam IsBalance default 0 ';
                 const strSize = str.length;
 
                 for(let n in _nodes) str += _nodes[n].toStringType('balance');
 
                 if(str.length > strSize)
-                    str = str.insertAt(':=\n', strSize)
+                    str = str.insertAt(':=', strSize)
 
                 str = replaceInvalidCharsWithSemicolon(str);
 
@@ -240,7 +240,7 @@ const AMPLJS = (function(){
                 for(let n in _nodes) str += _nodes[n].toStringType('sum');
 
                 if(str.length > strSize)
-                    str = str.insertAt(':=\n', strSize)
+                    str = str.insertAt(':=', strSize)
 
                 str = replaceInvalidCharsWithSemicolon(str);
 
@@ -288,14 +288,12 @@ const AMPLJS = (function(){
         printCalculatedParameters: () => {
             if(_parameters != undefined){
                 let str = '';
-                str += '\n\nmodel;\n';
 
                 for(let n in _parameters) {
                     if(_parameters[n].category == 'calculated')
                         str += `\nsubject to ValCalculated${_parameters[n].name} { c in CALCULATED: c = '${_parameters[n].name}'}: val[c] = ${_parameters[n].toStringFormula(_parameters)};`;
                 }
-            
-                str += '\n\ndata;\n'
+        
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
@@ -318,13 +316,12 @@ const AMPLJS = (function(){
             return '';
         },
         printFactorsSubject: () => {
+            let str = '';
             if(_flows != undefined){
-                let str = '\n\nmodel;';
                 let i = 0;
 
                 for(let f in _flows) str += `\nsubject to Factor${i++}: factor['${_flows[f].bottom.name}', '${_flows[f].top.name}'] = ${_flows[f].toStringFormulaWithResults()};`;
 
-                str += '\n\ndata;';
 
                 return str;
             }
@@ -333,13 +330,12 @@ const AMPLJS = (function(){
             return '';
         },
         printDurationsSubject: () => {
+            let str = '';
             if(_nodes != undefined){
-                let str = '\n\nmodel;';
                 let i = 0;
 
                 for(let n in _nodes) str += `\nsubject to Duration${i++}: duration['${_nodes[n].name}'] = ${_nodes[n].toStringFormulaWithResults()};`;
 
-                str += '\n\ndata;';
 
                 return str;
             }
@@ -370,16 +366,23 @@ class Node{
     toStringDuration(platform){}
     toString(platform){}
     toStringType = (type) => type == this.type ? `\n${this.name}\t1,` : ''
-    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
-        _params = _params || AMPLJS.getGraph().parameters
-        const param = _params[name]
+    toStringFormulaWithResults = (_params) => {
+        let formula = this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
+            _params = _params || AMPLJS.getGraph().parameters
+            const param = _params[name]
 
-        if(param != undefined)
-            return param.toStringNameOrValue()          //Os parametros podem aparecer repetidos em uma fórmula?
+            if(param != undefined)
+                return param.toStringNameOrValue()
+
+            return name;
+        })
         
+        if(hasOnlyDigitsOnFormula(formula))
+            formula = eval(formula)
 
-        return name;
-    })
+        return formula
+
+    }
 }
 
 class Flow{
@@ -407,17 +410,23 @@ class Flow{
     toStringFactor(platform){}    //Fórmulas para a plataforma especificada
     toString(platform){}             //top.name   bottom.name
     toStringSign = () => `\t${this.bottom.name} ${this.top.name}, ${this.type == 'PROD' ? -1 : 1},\n`     //1 se type = treatment, -1 de type = production
-    toStringFormulaWithResults = (_params) => this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
-        _params = _params || AMPLJS.getGraph().parameters
-        const param = _params[name]
+    toStringFormulaWithResults = (_params) => {
+        let formula = this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
+            _params = _params || AMPLJS.getGraph().parameters
+            const param = _params[name]
 
-        if(param != undefined)
-            return param.toStringNameOrValue()
+            if(param != undefined)
+                return param.toStringNameOrValue()
+
+            return name;
+        })
         
+        if(hasOnlyDigitsOnFormula(formula))
+            formula = eval(formula)
 
-        return name;
-    })   
-    
+        return formula
+
+    }
 }
 
 class Parameter{
@@ -444,7 +453,7 @@ class Parameter{
     toStringByCat = (category) => this.category == category ? `\n\t${this.name}\t${this.val},` : ``
     toStringNameOrValue = () => {
         if (this.category == 'fixed') return `${this.val}`  
-        if (this.category == 'calculated') return this.toStringFormula()
+        if (this.category == 'calculated') return `(${this.toStringFormula()})`
         return `val['${this.name}']`
     }
     toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
@@ -453,6 +462,7 @@ class Parameter{
 
         if(param != undefined)
             return param.toStringNameOrValue()
+            
 
         return name;
     }) : ''
@@ -582,9 +592,10 @@ const  replaceInvalidCharsWithSemicolon = (str) => {
 
 const isInvalidChar = (char = '', invalidChars = []) => invalidChars.includes(char)
     
-
-
-
 String.prototype.insertAt = function(element, position){ 
-    return this.replace(new RegExp(`(?<=^.{${position}})`), element);
+    return `${this.substring(0, position)}${element}${this.substring(position)}`;
 }
+
+const removeComments = (s) => s.replace(/(\/\*[^*]*\*\/)|(\/\/[^*]*)/g, '');
+
+const hasOnlyDigitsOnFormula = (formula) => typeof formula == 'string' ? formula.search(/[a-zA-Z_]/g) == -1 : false 
