@@ -27,7 +27,7 @@
     </v-container>
     <v-container>
 
-      <v-row>
+      <v-row :align="alignment">
         <v-col
         cols="12"
         sm="12"
@@ -54,7 +54,7 @@
       </v-row>
     </v-container>
     <v-container>
-      <v-row>
+      <v-row :align="end">
         <v-btn class="mx-auto" v-on:click="translate" text large color="primary" > Traduzir</v-btn>
       </v-row>
     </v-container>
@@ -66,6 +66,8 @@
 <script defer src="scripts/ampljs.js"></script>
 <script defer src="scripts/index.js"></script>
 <script defer src="scripts/validation.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.0.2/math.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.0.2/math.min.map"></script>
 <script defer src="scripts/string-codebase.js"></script>
 
 

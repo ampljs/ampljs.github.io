@@ -353,8 +353,8 @@ class Node{
     /*String */ name
     /*String */ type
     /*String */ stage
-    /*String */ duration   //Fórmula de duration
-    /**String */formula
+    /*String */ duration   
+    /*String */formula //Fórmula de duration
     constructor(name, type, stage, duration, formula){
         this.name = name;
         this.type = type;
@@ -377,9 +377,8 @@ class Node{
             return name;
         })
 
+        formula = math.simplify(formula).toString()
         formula = replaceExponentialOperator(formula)
-        if(hasOnlyDigitsOnFormula(formula))
-            formula = eval(formula)
 
         return formula
 
@@ -422,9 +421,8 @@ class Flow{
             return name;
         })
 
+        formula = math.simplify(formula).toString()
         formula = replaceExponentialOperator(formula)
-        if(hasOnlyDigitsOnFormula(formula))
-            formula = eval(formula)
 
         return formula
 
@@ -456,7 +454,7 @@ class Parameter{
     toStringNameOrValue = () => {
         if (this.category == 'fixed') return `${this.val}`  
         if (this.category == 'calculated') return `(${this.toStringFormula()})`
-        return `val['${this.name}']`
+        return `${this.name}`
     }
     toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
         _params = _params || AMPLJS.getGraph().parameters
@@ -475,21 +473,28 @@ class Indicator{
     /*String*/ name
     /*String*/ formula
     /*String*/ objective   /*{max, min} */
-    /**Array<String> */ terms
- 
-    toString(platform){}
+    /*Array<string> */ terms
+    /*Array<string> */ methods
+    toString(){}
+    toStringFormula(){}
+    toStringTerms(){}
+    toStringMethods(){}
+    calculateTerm(termId){}
 }
 
 class Resource{
     /*String*/uid
     /*String*/name
-    /*Array<String>*/ categories
+    /*String*/ category
     /**String */ unit
-    constructor(name, categories, unit){
+    constructor(name, category, unit){
         this.name = name;
-        this.categories = categories;
+        this.category = category;
         this.unit = unit;
     }
+
+    toStringCategory(category){}
+    
 }
 
 

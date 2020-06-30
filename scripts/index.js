@@ -3,7 +3,8 @@ const App = new Vue({
     data: {
         jsonCode: '{"json": "code"}',
         amplCode: 'ampl code',
-        message:'Uma mensagem'
+        message:'Uma mensagem',
+        alignment: 'stretch'
     },
     methods:{
         translate: _translate
