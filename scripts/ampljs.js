@@ -132,19 +132,25 @@ const AMPLJS = (function(){
             return '';
         },
         printParameters: () => {
+            if(_parameters != undefined){
+                let str = '';
+                str += '\nmodel;\n'
+                for(let p in _parameters) str += `${replaceInvalidCharsWithSemicolon(p)} >= ${_parameters[p].min} <= ${_parameters[p].max};` 
+            }
+            else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
+            return '';
+        },
+        printParameters: () => {
             if(_parameters != undefined) {
                 let str = '';
 
-                str += '\n\nset PARAMETERS := \n';
-
-                for(let k in _parameters) str += `\t${k} \n`;
-                str = replaceInvalidCharsWithSemicolon(str);
+                for(let k in _parameters) str += _parameters[k].category == 'optimized' ? `\nvar ${k}${_parameters[k].category == 'optimized' ? ' >= ' + _parameters[k].min + ' <= ' + _parameters[k].max : ''};` : '';
                 return str;
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
             return '';
         },
-        printFixed:() => {
+        /*printFixed:() => {
             if(_parameters != undefined) {
                 let str = '';
 
@@ -156,7 +162,7 @@ const AMPLJS = (function(){
             }
             else console.error('Você precisa carregar os Parameters com AMPLJS.loadParameters()');
             return '';
-        },
+        },*/
         printCalculated:() => {
             if(_parameters != undefined) {
                 let str = '';
@@ -291,7 +297,7 @@ const AMPLJS = (function(){
 
                 for(let n in _parameters) {
                     if(_parameters[n].category == 'calculated')
-                        str += `\nsubject to ValCalculated${_parameters[n].name} { c in CALCULATED: c = '${_parameters[n].name}'}: val[c] = ${_parameters[n].toStringFormula(_parameters)};`;
+                        str += `\nsubject to ValCalculated_${_parameters[n].name}: ${_parameters[n].name} = ${_parameters[n].toStringFormula(_parameters)};`;
                 }
         
                 return str;
@@ -447,6 +453,7 @@ class Parameter{
         this.max = max;
         this.val = val;
         this.formula = formula;
+        console.log('parameter ', category)
     }
     toString(platform){}
     isCategory(category){}
