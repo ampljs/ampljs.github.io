@@ -25,17 +25,17 @@ function _translate(){
         AMPLJS.loadResources();
         AMPLJS.loadParameters();
         amplCode = FIXED_MODEL_STRING;
+        amplCode += AMPLJS.printParameters();
+        //amplCode += AMPLJS.printCalculatedParameters();
         amplCode += AMPLJS.printFactorsSubject();
         amplCode += AMPLJS.printDurationsSubject();
-        amplCode += AMPLJS.printCalculatedParameters();
         amplCode += `\n\ndata;`;
         amplCode += AMPLJS.printNodes();
         amplCode += AMPLJS.printFlows();
         amplCode += AMPLJS.printResources();
-        amplCode += AMPLJS.printParameters();
-        amplCode += AMPLJS.printFixed();
+        //amplCode += AMPLJS.printFixed();
         amplCode += AMPLJS.printCalculated();
-        amplCode += AMPLJS.printOptimized();
+        //amplCode += AMPLJS.printOptimized();
         amplCode += AMPLJS.printFixedValues();
         amplCode += AMPLJS.printFlowsResource();
         amplCode += AMPLJS.printSigns();
@@ -43,7 +43,7 @@ function _translate(){
         amplCode += AMPLJS.printRoot();
         amplCode += AMPLJS.printStations();
         amplCode += AMPLJS.printSums();
-        amplCode += AMPLJS.printMinMaxParameters();
+        //amplCode += AMPLJS.printMinMaxParameters();
         OutputTextArea.setValue(amplCode);
 
         Validator.checkNodes(JSON.parse(jsonCode)['simulationData'], amplCode)
