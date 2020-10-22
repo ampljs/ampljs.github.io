@@ -1,115 +1,65 @@
 const FIXED_MODEL_STRING = `reset;
+
 model;
-option solver minos;
-option substout 1;
+
+option substout 1; 
+option presolve 0;
 option show_stats 1;
-option presolve 1;
-#option linelim 1;
-set NODES;
-set PARAMETERS;
-set FLOWS within NODES cross NODES;
-set RESOURCES;
-set TERMS;
-set INDICATORS;
-set TERMCATEGORIES{INDICATORS, TERMS};
-set TERMCLASSES;
-set TERMNODES{TERMS} within NODES;
-set TERMFLOWS{TERMS} within FLOWS;
-set CATEGORIES{RESOURCES};
-#set FIXED within PARAMETERS;
-#set CALCULATED within PARAMETERS diff FIXED;
-#set VARIABLES within PARAMETERS diff (FIXED union CALCULATED);
+option solver minos;
+option minos_options 'major_iterations=100000';
 
-
-param Min{PARAMETERS};
-param Max{p in PARAMETERS} >= Min[p];
-param Std{p in PARAMETERS} >= Min[p] <= Max[p];
-param Resource{FLOWS} in RESOURCES symbolic;
-param Property{RESOURCES, TERMS} in PARAMETERS;
-param Indicator in INDICATORS;
-param IndicatorSign in {-1, 1};
 param Cycle := 365;
-param TermMethod{INDICATORS, TERMS} in PARAMETERS symbolic;
-param TermParm/*{INDICATORS, TERMS}*/ in INDICATORS symbolic;
-param Fixed{FIXED};
-param IsRoot{NODES} binary;
-param IsStation{NODES} binary;
-param IsSum{NODES} binary;
-param IsBalance{NODES} binary;
-param Sign{FLOWS} in {-1,1};
+
+set NODES;
+param IsRoot{NODES} binary default 0;
+param IsBalance{NODES} binary default 0;
+param IsSum{NODES} binary default 0;
+set TermNodes within NODES;
+var duration{n in TermNodes} default 0;
+
+set FLOWS within NODES cross NODES;
+param Sign{FLOWS} in {-1,1} default 1;
+var factor{FLOWS} default 1; 
+var qty{FLOWS} default 1;
+
+set PARAMETERS;
+set PROPERTIES := PARAMETERS union {'_1'}; 
+param Std{p in PROPERTIES} default 1; 
+param Min{p in PROPERTIES} default Std[p] <= Std[p];
+param Max{p in PROPERTIES} default Std[p] >= Std[p];
+var val {p in PROPERTIES} default Std[p];
+
+set TERMS := {'N1', 'N2', 'N3', 'D1', 'D2', 'D3'};
+set TermMethods within TERMS cross (PARAMETERS union {'_0', '_1', 'Input', 'Output', 'Stock'});
+set TermFlowProperties within TERMS cross FLOWS cross PROPERTIES;
+var term{TERMS} default 0;
+var Indicator  default 0;
+
+maximize IndicatorMax: Indicator;
+    
+subject to IndicatorTerms: Indicator = 
+	((term["N1"] - term["N2"]) * term["N3"]) / ((term["D1"] - term["D2"]) * term["D3"]);
+
+subject to TermMethod{(t,m) in TermMethods}: term[t] = 
+	if m = "Stock" then
+		(sum {(t,i,j,p) in TermFlowProperties} val[p] * qty[i, j] * (duration[i] + duration[j]))/2/Cycle
+	else if m in {"Input", "Output"} then
+		sum{(t,i,j,p) in TermFlowProperties} val[p] * qty[i, j]
+	else if m = "_0" then 0
+	else if m = "_1" then 1
+	else val[m];
 
 
-var val {PARAMETERS};
-var variables{v in VARIABLES} default Std[v] >= Min[v] <= Max[v];
-var day{FLOWS};
-var factor{FLOWS} >= 0;
-var qty{FLOWS};
-var term{TERMS};
-
-
-var duration{n in NODES} >= 0;
-
-maximize Quantities: sum{(i, j) in FLOWS} (qty[i,j] + day[i,j]);
-
-
-
-
-
-
-subject to ValFixed{p in FIXED}: val[p] = Fixed[p];
-subject to ValOptimized{p in VARIABLES}: val[p] = variables[p];
-
-
-
-
-subject to FlowDay{(n, j) in FLOWS}:
-	day[n, j] = 
-	(if IsRoot[n] then 
-		duration[n]
-	else if IsStation[n] then
-		sum{(i, n) in FLOWS} (day[i, n] + duration[n] * (Sign[i,n] + Sign[n,j]) / 2 )
-	else if IsSum[n] then
-		(sum{(i,n) in FLOWS} day[i, n]) / (sum{(i, n) in FLOWS} 1)
-	else if IsBalance[n] then
-		Sign[n, j] * sum{(i,n) in FLOWS} (day[i,n] * (Sign[i,n] + Sign[n, j] / 2 ))
-	else Infinity);
-
-		
-subject to FlowQty{(n,j) in FLOWS}:
-	qty[n, j] = (
-	if IsRoot[n] then 
-		factor[n, j]
-	else if IsStation[n] then
-		sum{(i, n) in FLOWS} (qty[i, n] * factor[n, j])
-	 else if IsSum[n] then
-		sum{(i, n) in FLOWS} qty[i, n]
-	else if IsBalance[n] then
-		(if sum{(i, n) in FLOWS} (Sign[i, n] * day[i, n]) mod Cycle = 0 then
-			max(Sign[n, j] * sum{(i, n) in FLOWS} (Sign[i, n] * qty[i, n]), 0)
-		else Sign[n, j] * sum{(i, n) in FLOWS} (qty[i, n] * (Sign[i, n] + Sign[n, j] / 2))
-		)	
-		else Infinity);
-
-subject to OnlyIntegerDurations {n in NODES}: round(duration[n]) = duration[n];	
-
-subject to OnlyPositiveFactors{(i,j) in FLOWS}: (if factor[i,j] > 0 then 0 else 1) = 0;
-
-	
-
-
-		
-/*subject to TermsVal{t in TERMS}:
-	term[t] = (
-	if TermMethod[Indicator, t] = 'Stock' then
-		sum{n in TERMNODES[t], (n, j) in TERMFLOWS[t]} (val[Property[Resource[n, j], t]] * qty[n,j] * duration[n] / 2 / Cycle) + sum{n in TERMNODES[t], (j, n) in TERMFLOWS[t]} (val[Property[Resource[j,n], t]] * qty[j, n] * duration[n] / 2 / Cycle)
-	else if TermMethod[Indicator, t] = 'Input' then
-		sum{n in TERMNODES[t], (n, j) in TERMFLOWS[t]} (val[Property[Resource[n, j], t]] * qty[n,j] * (1 + Sign[n,j]) / 2) + sum{n in TERMNODES[t], (j,n) in TERMFLOWS[t]} (val[Property[Resource[j, n], t]] * qty[j, n] * (1 - Sign[j,n]) / 2)	
-	else if TermMethod[Indicator, t] = 'Output' then
-		sum{n in TERMNODES[t], (n, j) in TERMFLOWS[t]} (val[Property[Resource[n, j], t]] * qty[n,j] * (1 - Sign[n, j]) / 2) + sum{n in TERMNODES[t], (j, n) in TERMFLOWS[t]} (val[Property[Resource[j, n], t]] * qty[j,n] * (1 + Sign[j,n]) / 2)
-	else if TermMethod[Indicator, t] = 'TermParm' then
-		val[TermMethod[TermParm, t]]
-	else if TermMethod[Indicator, t] = '1' then
-		1
+subject to FlowQty{(n, j) in FLOWS}: qty[n, j] =
+	if IsRoot[n] then
+		factor[n, j] else
+	if IsSum[n]  then
+		sum{(i, n) in FLOWS} qty[i, n] else
+    if IsBalance[n] then
+    	Sign[n, j] * sum{(i, n) in FLOWS} Sign[i, n] * qty[i, n]
 	else
-		0
-	);*/`
+		factor[n, j] * sum{(i, n) in FLOWS} qty[i, n];
+
+subject to ValFixed{p in PROPERTIES: Min[p] = Max[p]}: val[p] = Std[p];
+subject to ValNotFixed{p in PROPERTIES: Min[p] <> Max[p]}: Min[p] <= val[p] <= Max[p];
+subject to PositiveQty{(n,j) in FLOWS: IsBalance[n]}: qty[n,j] >= 0;`

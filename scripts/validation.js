@@ -9,9 +9,9 @@ class Validator {
     }
 
     static checkFlows(simulationDataObject, output){
-        const flows = simulationDataObject['graph']['flows']
+        const flows = AMPLJS.getGraph().flows
         let checkOk = true
-        for (let f in flows) output.search(removeUselessCharsInNodeName(f, 'flow').replace('-', ', ')) == -1 ? checkOk = false : true
+        for (let f in flows) output.search(removeUselessCharsInNodeName(flows[f].toStringName('-'), 'flow').replace('-', ', ')) == -1 ? checkOk = false : true
 
         if(checkOk) console.log('Flows gerados com sucesso.')
         else console.error('Os Flows gerados não batem com a entrada')
