@@ -342,7 +342,7 @@ const AMPLJS = (function () {
     },
     printMinMaxParameters: () => {
       if (_parameters != undefined) {
-        let str = '\n\nparam:\tMin,\tMax :=';
+        let str = '\n\nparam:\tMin\tMax :=';
 
         for (let n in _parameters) {
           if (_parameters[n].category == 'optimized')
