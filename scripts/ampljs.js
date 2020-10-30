@@ -87,8 +87,11 @@ const AMPLJS = (function () {
       else console.error('Você precisa carregar o json primeiro com AMPLJS.loadJSONObject(json)');
     },
     loadIndicator: () => {
-      if (modelJSONObject != undefined && Indicators != undefined) {
-        var selectedIndicator = Indicators[userJSONObject['indicator']['name']]
+      if(jsonIndicators != null){
+        indicators = JSON.parse(jsonIndicators);
+      }
+      if (modelJSONObject != null && indicators != null) {
+        var selectedIndicator = indicators[userJSONObject['indicator']['name']]
         if (selectedIndicator != undefined) {
           _indicator = new Indicator(selectedIndicator.name, userJSONObject['indicator']['objective'], selectedIndicator['terms'])
         }

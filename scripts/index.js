@@ -2,8 +2,6 @@ const App = new Vue({
     el: '#ampljs-app',
     data: {
         jsonCode: '{"json": "code"}',
-        amplCode: 'ampl code',
-        message:'Uma mensagem',
         alignment: 'stretch'
     },
     methods:{
@@ -12,8 +10,13 @@ const App = new Vue({
 })
 
 const InputTextArea = CodeMirror.fromTextArea(document.getElementById('input-textarea'),{lineNumbers: true, mode: 'javascript'});
+const InputJsonUsuario = CodeMirror.fromTextArea(document.getElementById('input-json-usuario'),{lineNumbers: true, mode: 'javascript'});
+const InputJsonIndicatores = CodeMirror.fromTextArea(document.getElementById('input-json-indicadores'),{lineNumbers: true, mode: 'javascript'});
 const OutputTextArea = CodeMirror.fromTextArea(document.getElementById('output-textarea'), {lineNumbers: true});
-const jsonUser = JSON.stringify({
+
+InputJsonIndicatores.setValue(JSON.stringify(Indicators, null, 2))
+
+InputJsonUsuario.setValue(JSON.stringify({
     indicator: {
         name: 'i13',
         objective: 'maximize'
@@ -22,12 +25,15 @@ const jsonUser = JSON.stringify({
         {name: 'PESO_cerquilha_MULTIPARAS'},
         {name: 'PRECO_PESO_cerquilha_BOVINOS'}
     ]
-});
+}, null, 2),)
+
+var jsonUser;
+let jsonIndicators;
 
 function _translate(){
-    console.log('translating');
     jsonCode = removeComments(InputTextArea.getValue(separator = ' ').trim());
-
+    jsonUser = InputJsonUsuario.getValue(separator = ' ')
+    jsonIndicators = InputJsonIndicatores.getValue(separator = ' ')
     let amplCode = '';
     if(AMPLJS.isJSON(jsonCode)){
         AMPLJS.loadModelJSONObject(jsonCode);

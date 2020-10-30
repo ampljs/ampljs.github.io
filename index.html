@@ -10,7 +10,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
   <title>AMPLjs - Gerador de código AMPL.</title>
-  <meta name="description" content="The HTML5 Herald">
   <meta name="author" content="JMorais">
 
 </head>
@@ -34,17 +33,42 @@
         md="6"
         lg="6"
         xl="6">
-        <h6 class="ml-4">JSON:</h4>
+        <h6 class="ml-4">JSON SIMULAÇÃO:</h4>
           <v-card outlined>
             <textarea id="input-textarea"></textarea>
           </v-card>
         </v-col>
         <v-col
+        :align='alignment'
+        cols="12"
+        sm="6"
+        md="3"
+        lg="3"
+        xl="3">
+        <h6 class="ml-4">JSON INDICADORES:</h4>
+          <v-card outlined>
+            <textarea id="input-json-indicadores"></textarea>
+          </v-card>
+        </v-col>
+        <v-col
+        cols="12"
+        sm="6"
+        md="3"
+        lg="3"
+        xl="3">
+        <h6 class="ml-4">JSON USUÁRIO:</h4>
+          <v-card outlined>
+            <textarea id="input-json-usuario"></textarea>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-row :align="alignment">
+        <v-col
         cols="12"
         sm="12"
-        md="6"
-        lg="6"
-        xl="6">
+        md="12"
+        lg="12"
+        xl="12">
         <h6 class="ml-4">AMPL:</h4>
           <v-card outlined>
             <textarea id="output-textarea"></textarea>
