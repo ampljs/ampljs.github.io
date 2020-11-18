@@ -1,4 +1,8 @@
-const FIXED_MODEL_STRING = `reset;
+export default {
+	getCodebase: () => codebase
+}
+
+const codebase = `reset;
 
 model;
 

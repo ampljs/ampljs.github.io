@@ -17,3 +17,5 @@ class Validator {
         else console.error('Os Flows gerados não batem com a entrada')
     }
 }
+
+export default new Validator();

@@ -1,7 +1,13 @@
+//import Vue from "vue"
+const math = require('mathjs')
+//import Validator from "./validation"
+import _ from "./codebase"
+
 const AMPLJS = (function () {
-  var modelJSONString;
+  //var modelJSONString;
   var modelJSONObject;
-  var userJSONString;
+  //var userJSONString;
+  var jsonIndicators;
   var userJSONObject;
   var _parameters;
   var _nodes;
@@ -23,16 +29,17 @@ const AMPLJS = (function () {
         resources: _resources,
         parameters: _parameters,
         indicator: _indicator,
-        json: modelJSONObject
+        json: modelJSONObject,
+        removeComments: removeComments
       }
     },
     loadModelJSONObject: (json) => {
       modelJSONObject = JSON.parse(json);
-      modelJSONString = json;
+      //modelJSONString = json;
     },
     loadUserJsonObject: (json) => {
       userJSONObject = JSON.parse(json);
-      userJSONString = json;
+      //userJSONString = json;
     },
     loadParameters: () => {
       if (modelJSONObject != undefined) {
@@ -42,7 +49,7 @@ const AMPLJS = (function () {
         const systemParameters = modelJSONObject['simulationData']['systemParameters']
         const calculatedParameters = modelJSONObject['simulationData']['calculatedParameters']
 
-        for (let k in n) _parameters[k] = new Parameter(k, getParameterCategory({ name: k, min: systemParameters[k].min, max: systemParameters[k].max }, ['CONFINAMENTO', 'PERDAS_CRIA', 'AGUAS', 'INICIO_AGUAS']), systemParameters[k].std, systemParameters[k].min, systemParameters[k].max, n[k]);
+        for (let k in n) _parameters[k] = new Parameter(k, getParameterCategory({ name: k, min: systemParameters[k].min, max: systemParameters[k].max }, userJSONObject['parameters'].map(e => e.name)), systemParameters[k].std, systemParameters[k].min, systemParameters[k].max, n[k]);
         for (let k in calculatedParameters) _parameters[k] = new Parameter(k, 'calculated', 1, 1, 2, 1, calculatedParameters[k])
 
       }
@@ -87,11 +94,12 @@ const AMPLJS = (function () {
       else console.error('Você precisa carregar o json primeiro com AMPLJS.loadJSONObject(json)');
     },
     loadIndicator: () => {
-      if(jsonIndicators != null){
+      var indicators;
+      if (jsonIndicators != null) {
         indicators = JSON.parse(jsonIndicators);
       }
       if (modelJSONObject != null && indicators != null) {
-        var selectedIndicator = indicators[userJSONObject['indicator']['name']]
+        var selectedIndicator = indicators[userJSONObject['indicator']['id']]
         if (selectedIndicator != undefined) {
           _indicator = new Indicator(selectedIndicator.name, userJSONObject['indicator']['objective'], selectedIndicator['terms'])
         }
@@ -297,7 +305,6 @@ const AMPLJS = (function () {
       if (_nodes != undefined) {
         let str = '';
         str += '\n\nparam IsStation :=';
-        const strSize = str.length;
 
         for (let n in _nodes) str += _nodes[n].toStringType('station');
 
@@ -325,8 +332,61 @@ const AMPLJS = (function () {
 
       return '';
     },
-    translate: (input, output) => {
-      //output.setValue(FIXED_MODEL_STRING);
+    translate: (jSimulation, jUser, jIndicators) => {
+      //console.log(removeComments(jSimulation))
+      //console.log(jUser)
+      //console.log(jIndicators)
+
+      //_.getCodebase();
+      var jsonSimulation = removeComments(jSimulation);
+      var jsonUser = removeComments(jUser)
+      jsonIndicators = removeComments(jIndicators)
+      let amplCode = '';
+      
+      if (AMPLJS.isJSON(jsonSimulation)) {
+        AMPLJS.loadModelJSONObject(jsonSimulation);
+        AMPLJS.loadUserJsonObject(jsonUser);
+        AMPLJS.loadNodes();
+        AMPLJS.loadFlows();
+        AMPLJS.loadResources();
+        AMPLJS.loadParameters();
+        AMPLJS.loadIndicator();
+        amplCode = _.getCodebase();
+        if(userJSONObject.indicator.objective != 'maximize')
+          amplCode = amplCode.replace('maximize', 'minimize')
+        //amplCode += AMPLJS.printOptimizedParameters();
+        //amplCode += AMPLJS.printCalculatedParameters();
+        amplCode += AMPLJS.printFactorsSubject();
+        amplCode += AMPLJS.printDurationsSubject();
+        amplCode += `\n\ndata;`;
+        amplCode += AMPLJS.printNodes();
+        amplCode += AMPLJS.printBalances();
+        amplCode += AMPLJS.printRoot();
+        //amplCode += AMPLJS.printStations();
+        amplCode += AMPLJS.printSums();
+        amplCode += AMPLJS.printFlows();
+        //amplCode += AMPLJS.printResources();
+        //amplCode += AMPLJS.printFixed();
+        //amplCode += AMPLJS.printFixedValues();
+        amplCode += AMPLJS.printSigns();
+        amplCode += AMPLJS.printParameters();
+        //amplCode += AMPLJS.printProperties();
+        //amplCode += AMPLJS.printCalculated();
+        //amplCode += AMPLJS.printOptimized();
+        //amplCode += AMPLJS.printFixedValues();
+        //amplCode += AMPLJS.printFlowsResource();
+
+        amplCode += AMPLJS.printStdParameters();
+        amplCode += AMPLJS.printMinMaxParameters();
+        amplCode += AMPLJS.printTermMethod();
+        amplCode += AMPLJS.printFlowProperties();
+        amplCode += AMPLJS.printTermNodes();
+
+        //Validator.checkNodes(JSON.parse(jsonSimulation)['simulationData'], amplCode)
+        //Validator.checkFlows(JSON.parse(jsonSimulation)['simulationData'], amplCode)
+        console.log(amplCode)
+        return amplCode;
+      }
     },
     printCalculatedParameters: () => {
       if (_parameters != undefined) {
@@ -445,13 +505,13 @@ const AMPLJS = (function () {
 })();
 
 class Node {
-    /*String */ uid
-    /*String */ name
-    /*String */ type
-    /*String */ stage
-    /*String */ duration
-    /*String */formula //Fórmula de duration
-    /**Array<Flow> */ flows
+      /*String */ uid
+      /*String */ name
+      /*String */ type
+      /*String */ stage
+      /*String */ duration
+      /*String */formula //Fórmula de duration
+      /**Array<Flow> */ flows
   constructor(name, type, stage, duration, formula, flows = []) {
     this.name = name;
     this.type = type;
@@ -460,9 +520,6 @@ class Node {
     this.formula = formula;
     this.flows = flows;
   }
-
-  toStringDuration(platform) { }
-  toString(platform) { }
   toStringType = (type) => type == this.type ? `\n\t${this.name}\t1,` : ''
   toStringFormulaWithResults = (_params) => {
     let formula = this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
@@ -485,15 +542,15 @@ class Node {
 }
 
 class Flow {
-    /*String*/uid
-    /*String*/type
-    /*Node*/top
-    /*Node*/bottom
-    /*String*/factor
-    /*String*/qty    //Inclui inicialmente só para caso de armazenarmos algum valor 'standard' da variável
-    /*String*/day      //Mesmo caso descrito acima
-    /**String */formula
-    /*Resource*/ resource
+      /*String*/uid
+      /*String*/type
+      /*Node*/top
+      /*Node*/bottom
+      /*String*/factor
+      /*String*/qty    //Inclui inicialmente só para caso de armazenarmos algum valor 'standard' da variável
+      /*String*/day      //Mesmo caso descrito acima
+      /**String */formula
+      /*Resource*/ resource
 
   constructor(type, bottom, top, factor, qty, day, resource, formula) {
     this.type = type;
@@ -506,8 +563,6 @@ class Flow {
     this.formula = formula;
   }
 
-  toStringFactor(platform) { }    //Fórmulas para a plataforma especificada
-  toString(platform) { }             //top.name   bottom.name
   toStringSign = () => `\n\t${this.toStringName(' ')}, ${this.type == 'PROD' ? -1 : 1}`     //1 se type = treatment, -1 de type = production
   toStringName = (_) => `${this.type == 'PROD' ? `${this.top.name}${_}${this.bottom.name}` : `${this.bottom.name}${_}${this.top.name}`}`;
   toStringFormulaWithResults = (_params) => {
@@ -531,14 +586,14 @@ class Flow {
 }
 
 class Parameter {
-    /*String*/ uid
-    /*String*/ name
-    /*String*/ category    /*FIXED, CALCULATED, OPTIMIZED */
-    /*String*/val
-    /*String*/ std
-    /*String*/ min
-    /*String*/ max
-    /*String */formula
+      /*String*/ uid
+      /*String*/ name
+      /*String*/ category    /*FIXED, CALCULATED, OPTIMIZED */
+      /*String*/val
+      /*String*/ std
+      /*String*/ min
+      /*String*/ max
+      /*String */formula
 
   constructor(name, category, std, min, max, val, formula) {
     this.name = name;
@@ -549,8 +604,7 @@ class Parameter {
     this.val = val;
     this.formula = formula;
   }
-  toString(platform) { }
-  isCategory(category) { }
+
   toStringByCat = (category) => this.category == category ? `\n\t${this.toStringName()}\t${this.val},` : ``
   toStringName = () => this.name.includes('#') ? this.name.replace('#', '_cerquilha_') : this.name
   toStringNameOrValue = () => {
@@ -571,9 +625,9 @@ class Parameter {
 }
 
 class Indicator {
-    /*String*/ name
-    /*String*/ objective   /* {max, min} */
-    /*{method, property, stages, categories, flows} */ terms
+      /*String*/ name
+      /*String*/ objective   /* {max, min} */
+      /*{method, property, stages, categories, flows} */ terms
   constructor(name, objective, terms) {
     this.name = name;
     this.objective = objective;
@@ -625,8 +679,6 @@ class Indicator {
       }
     }
   }
-  toString() { }
-  toStringFormula() { }
   toStringProperties() {
     var str = '';
 
@@ -667,17 +719,15 @@ class Indicator {
 }
 
 class Resource {
-    /*String*/uid
-    /*String*/name
-    /*String*/ category
-    /**String */ unit
+      /*String*/uid
+      /*String*/name
+      /*String*/ category
+      /**String */ unit
   constructor(name, category, unit) {
     this.name = name;
     this.category = category;
     this.unit = unit;
   }
-
-  toStringCategory(category) { }
 
 }
 
@@ -711,9 +761,11 @@ const FlowTypes = {
 
 
 function removeUselessCharsInNodeName(nodeName, type) {
-  if (!(typeof nodeName == 'string')) return console.error('Nome do nó não encontrado.');
+  if (!(typeof nodeName == 'string'))
+    return 'Nome do nó deve ser uma string, tipo recebido: ' + typeof nodeName;
+  
   if (type === 'flow') {
-    nodesName = nodeName.split('-');    //Alguns nodes possuem - no nome.
+    var nodesName = nodeName.split('-');    //Alguns nodes possuem - no nome.
     if (nodesName.length > 2) {
       for (let i in nodesName) {
         if (!(nodesName[i].includes('_'))) {
@@ -736,10 +788,12 @@ function getTopAndBottomNodesOfFlow(flowString, _nodes) {
   const _names = flowString.split('-');
   const bottom = _nodes[_names[0]];
   const top = _nodes[_names[1]];
-
-  return {
-    bottom, top
+  if(bottom != null && top != null)
+    return {
+      bottom, top
   };
+  else return {}
+
 }
 
 const conector = '_cerquilha_'
@@ -788,10 +842,10 @@ function removeSpecialCharsFromResourceName(str) {
 
   for (var pattern in map) {
     str = str.replace(new RegExp(map[pattern], 'g'), pattern);
-  };
+  }
 
   return str;
-};
+}
 
 function getParameterCategory(p, optimizedParameters) {
   if (p.min == p.max) return 'fixed'
@@ -820,11 +874,11 @@ String.prototype.insertAt = function (element, position) {
 
 const removeComments = (s) => s.replace(/(\/\*[^*]*\*\/)|(\/\/[^*]*)/g, '');
 
-const hasOnlyDigitsOnFormula = (formula) => typeof formula == 'string' ? formula.search(/[a-zA-Z_]/g) == -1 : false
+//const hasOnlyDigitsOnFormula = (formula) => typeof formula == 'string' ? formula.search(/[a-zA-Z_]/g) == -1 : false
 
-const replaceExponentialOperator = (formula) => formula.replace('^', '**')
+const replaceExponentialOperator = (formula) => formula.replace(/[\^]/g, '**')
 
-
+/*
 const Indicators = {
   i1: {
     name: 'Preço de bovinos comprados, kg PV',
@@ -1109,3 +1163,13 @@ const Indicators = {
     }
   }
 };
+*/
+
+export default {
+  ampljs: AMPLJS, 
+  functions: {replaceExponentialOperator, removeComments, isInvalidChar, replaceInvalidCharsWithSemicolon, getParameterCategory, removeSpecialCharsFromResourceName, getTopAndBottomNodesOfFlow, removeUselessCharsInNodeName},
+  types: {Node, Flow, Resource, Parameter, Indicator}};
+/*module.exports = {
+  AMPLJS: AMPLJS, 
+  functions: {replaceExponentialOperator, removeComments, isInvalidChar, replaceInvalidCharsWithSemicolon, getParameterCategory, removeSpecialCharsFromResourceName, getTopAndBottomNodesOfFlow, removeUselessCharsInNodeName},
+  types: {Node, Flow, Resource, Parameter, Indicator}}*/
