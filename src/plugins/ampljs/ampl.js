@@ -384,7 +384,7 @@ const AMPLJS = (function () {
 
         //Validator.checkNodes(JSON.parse(jsonSimulation)['simulationData'], amplCode)
         //Validator.checkFlows(JSON.parse(jsonSimulation)['simulationData'], amplCode)
-        console.log(amplCode)
+        console.log(JSON.stringify(AMPLJS.getGraph().parameters, undefined, ' '))
         return amplCode;
       }
     },
@@ -438,7 +438,7 @@ const AMPLJS = (function () {
       if (_flows != undefined) {
         let i = 0;
 
-        for (let f in _flows) str += `\n${_flows[f].bottom.type === 'balance' || _flows[f].bottom.type === 'sum' ? '#' : ''}subject to Factor${i++}: factor['${_flows[f].toStringName("', '")}'] = ${_flows[f].toStringFormulaWithResults()};`;
+        for (let f in _flows) str += `\n${_flows[f].bottom.type === 'balance' || _flows[f].bottom.type === 'sum' ? '#' : ''}subject to Factor${i++}: factor['${_flows[f].toStringName("', '")}'] = ${_flows[f].toStringFormulaWithResults(AMPLJS.getGraph().parameters)};`;
 
 
         return str;
@@ -521,24 +521,7 @@ class Node {
     this.flows = flows;
   }
   toStringType = (type) => type == this.type ? `\n\t${this.name}\t1,` : ''
-  toStringFormulaWithResults = (_params) => {
-    let formula = this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
-      _params = _params || AMPLJS.getGraph().parameters
-      const param = _params[name]
-
-      if (param != undefined)
-        return param.toStringNameOrValue()
-
-      return name;
-    })
-
-    formula = math.simplify(formula).toString()
-    formula = formula.replace(/[A-Za-z_]{1,100}/g, (name) => `val["${name}"]`)
-    formula = replaceExponentialOperator(formula)
-
-    return formula
-
-  }
+  toStringFormulaWithResults = (_params) => simplifyFormula(this.formula, _params)
 }
 
 class Flow {
@@ -565,24 +548,7 @@ class Flow {
 
   toStringSign = () => `\n\t${this.toStringName(' ')}, ${this.type == 'PROD' ? -1 : 1}`     //1 se type = treatment, -1 de type = production
   toStringName = (_) => `${this.type == 'PROD' ? `${this.top.name}${_}${this.bottom.name}` : `${this.bottom.name}${_}${this.top.name}`}`;
-  toStringFormulaWithResults = (_params) => {
-    let formula = this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
-      _params = _params || AMPLJS.getGraph().parameters
-      const param = _params[name]
-
-      if (param != undefined)
-        return param.toStringNameOrValue()
-
-      return name;
-    })
-
-    formula = math.simplify(formula).toString()
-    formula = formula.replace(/[A-Za-z_]{1,100}/g, (name) => `val["${name}"]`)
-    formula = replaceExponentialOperator(formula)
-
-    return formula
-
-  }
+  toStringFormulaWithResults = (_params) => simplifyFormula(this.formula, _params)
 }
 
 class Parameter {
@@ -606,22 +572,13 @@ class Parameter {
   }
 
   toStringByCat = (category) => this.category == category ? `\n\t${this.toStringName()}\t${this.val},` : ``
-  toStringName = () => this.name.includes('#') ? this.name.replace('#', '_cerquilha_') : this.name
-  toStringNameOrValue = () => {
+  toStringName = () => this.name.includes('#') ? this.name.replace('#', conector) : this.name
+  toStringNameOrValue = (_params) => {
     if (this.category == 'fixed') return `${this.val}`
-    if (this.category == 'calculated') return `(${this.toStringFormula()})`
+    if (this.category == 'calculated') return `(${this.toStringFormula(_params || AMPLJS.getGraph().parameters)})`
     return this.toStringName()
   }
-  toStringFormula = (_params) => this.category == 'calculated' ? this.formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
-    _params = _params || AMPLJS.getGraph().parameters
-    const param = _params[name]
-
-    if (param != undefined)
-      return param.toStringNameOrValue()
-
-
-    return name;
-  }) : ''
+  toStringFormula = (_params) => this.category == 'calculated' ? simplifyFormula(this.formula, _params, this.category) : ''
 }
 
 class Indicator {
@@ -758,6 +715,25 @@ const FlowTypes = {
   'Produção': 'PROD',
   'Tratamento': 'TREAT'
 };
+
+const simplifyFormula = (_formula, _params, paramType) => {
+  let formula = _formula.replace(/[A-Za-z_]{1,100}/g, (name) => {
+    _params = _params || AMPLJS.getGraph().parameters
+    const param = _params[name]
+
+    if (param != undefined)
+      return param.toStringNameOrValue(_params)
+
+    return name;
+  })
+
+  formula = math.simplify(formula).toString()
+  if(paramType != 'calculated')
+    formula = formula.replace(/[A-Za-z_]{1,100}/g, (name) => `val["${name}"]`)
+  formula = replaceExponentialOperator(formula)
+
+  return formula
+}
 
 
 function removeUselessCharsInNodeName(nodeName, type) {
@@ -1165,10 +1141,12 @@ const Indicators = {
 };
 */
 
-export default {
-  ampljs: AMPLJS, 
-  functions: {replaceExponentialOperator, removeComments, isInvalidChar, replaceInvalidCharsWithSemicolon, getParameterCategory, removeSpecialCharsFromResourceName, getTopAndBottomNodesOfFlow, removeUselessCharsInNodeName},
-  types: {Node, Flow, Resource, Parameter, Indicator}};
+export const ampljs = AMPLJS;
+export const functions = {replaceExponentialOperator, removeComments, isInvalidChar, replaceInvalidCharsWithSemicolon, getParameterCategory, removeSpecialCharsFromResourceName, getTopAndBottomNodesOfFlow, removeUselessCharsInNodeName, simplifyFormula};
+export const types = {Node, Flow, Resource, Parameter, Indicator};
+export default {ampljs, functions, types}
+
+
 /*module.exports = {
   AMPLJS: AMPLJS, 
   functions: {replaceExponentialOperator, removeComments, isInvalidChar, replaceInvalidCharsWithSemicolon, getParameterCategory, removeSpecialCharsFromResourceName, getTopAndBottomNodesOfFlow, removeUselessCharsInNodeName},
