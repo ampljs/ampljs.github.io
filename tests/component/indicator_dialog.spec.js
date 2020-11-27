@@ -7,7 +7,7 @@ import IndicatorDialog from "../../src/components/Indicador"
 
 Vue.use(Vuetify)
 
-describe('show all available indicators in dialog', function () {
+describe('show all available indicators in dialog and let user choose one indicator', function () {
    let component;
    let localVue;
    let vuetify;
@@ -15,6 +15,9 @@ describe('show all available indicators in dialog', function () {
       localVue = createLocalVue();
       vuetify = new Vuetify()
       global.requestAnimationFrame = cb => cb()
+      const el = document.createElement('div')
+      el.setAttribute('data-app', true)
+      document.body.appendChild(el)
 
    })
    context('dont has indicators in list', () => {
@@ -22,7 +25,7 @@ describe('show all available indicators in dialog', function () {
          component = mount(IndicatorDialog, {
             localVue, vuetify, propsData: {
                indicators: {}
-            }
+            }, attrs: {'data-app': true}
          })
 
          component.find('div.v-select__slot').trigger('click')
@@ -37,7 +40,7 @@ describe('show all available indicators in dialog', function () {
          component = mount(IndicatorDialog, {
             localVue, vuetify, propsData: {
                indicators: {i1: indicators['i1']}
-            }
+            }, attrs: {'data-app': true}
          })
 
          component.find('div.v-select__slot').trigger('click')
@@ -50,13 +53,28 @@ describe('show all available indicators in dialog', function () {
    context('has many indicators', function ()  {
       it(`should show all indicators`, async function() {
          component = mount(IndicatorDialog, {
-            localVue, vuetify, propsData: {indicators}
+            localVue, vuetify, propsData: {indicators}, attrs: {'data-app': true}
          })
 
-         component.findAll('div.v-select__slot').trigger('click')
+         component.find('div.v-select__slot').trigger('click')
          await component.vm.$nextTick();
 
          expect(component.findAll('div.v-list-item').length).to.equal(Object.keys(indicators).length)
+      })
+   })
+
+   context('user select one indicator in list', function ()  {
+      it(`should show selected indicator in input`, async function() {
+         component = mount(IndicatorDialog, {
+            localVue, vuetify, propsData: {indicators}, attrs: {'data-app': true}
+         })
+
+         component.find('div.v-select__slot').trigger('click')
+         await component.vm.$nextTick()
+         component.find('div.v-list-item').trigger('click')
+         await component.vm.$nextTick()
+
+         expect(component.find('div.v-select__selection').text()).to.equal(indicators['i1'].name)
       })
    })
 })
