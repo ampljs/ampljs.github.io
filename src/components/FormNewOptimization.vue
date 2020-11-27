@@ -15,6 +15,7 @@
             <!-- COMPONENTE PARA SELEÇÃO DO INDICADOR -->
             <Indicador
               :indicators="indicators"
+              :key="jsonIndicators"
               @updateIndicator="selectedIndicator = $event"
             />
           </v-col>
@@ -28,6 +29,7 @@
             <h4>Parâmetros</h4>
             <!-- COMPONENTE PARA SELEÇÃO DO PARÂMETRO -->
             <Parametro
+            :key="jsonSimulation"
               :params="params"
               @addParam="selectedParameters = $event"
             />
@@ -111,7 +113,9 @@ export default Vue.component("FormNewOptimization", {
         .filter((e) => !e.disabled);
     },
     indicators: function () {
-      return JSON.parse(this.jsonIndicators);
+      if(typeof this.jsonIndicators === 'string' && this.jsonIndicators.length > 0)
+        return JSON.parse(this.jsonIndicators);
+      else return {};
     },
   },
   data: () => ({

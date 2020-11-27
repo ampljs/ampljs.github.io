@@ -1,3 +1,4 @@
+import { createLocalVue } from "@vue/test-utils";
 import { expect } from "chai";
 import { functions } from "../../src/plugins/ampljs/ampl";
 

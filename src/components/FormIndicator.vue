@@ -8,7 +8,7 @@
         <v-btn v-bind="attrs" v-on="on" elevation="2" color="primary" class="d-flex align-center" x-large><v-icon>mdi-clipboard-play</v-icon></v-btn>
       </template>
       <v-card>
-          <FormNewOptimization @closeDialog="dialog = $event" :jsonIndicators="jsonIndicators" :jsonSimulation="jsonSimulation"/>
+          <FormNewOptimization @close-dialog="dialog = $event" :jsonIndicators="jsonIndicators" :jsonSimulation="jsonSimulation"/>
       </v-card>
         
     </v-dialog>

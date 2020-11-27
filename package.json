@@ -5,7 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "build:lib": "vue-cli-service build --target lib --name ampljs",
     "test:unit": "vue-cli-service test:unit",
+    "test:component": "vue-cli-service test:unit ./tests/component/*.spec.js",
     "lint": "vue-cli-service lint",
     "deploy": "node scripts/gh-pages-deploy.js"
   },
@@ -29,13 +31,15 @@
     "chai": "^4.2.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "execa": "latest",
     "mocha": "^8.2.1",
     "sass": "^1.19.0",
     "sass-loader": "^8.0.0",
+    "sinon": "^9.2.1",
+    "sinon-chai": "^3.5.0",
     "vue-cli-plugin-vuetify": "~2.0.7",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.3.0",
-    "execa": "latest"
+    "vuetify-loader": "^1.3.0"
   },
   "eslintConfig": {
     "root": true,
@@ -54,7 +58,12 @@
       {
         "files": [
           "**/__tests__/*.{j,t}s?(x)",
-          "**/tests/**/*.spec.{j,t}s?(x)"
+          "**/tests/**/*.spec.{j,t}s?(x)",
+          "dist/*",
+          "src/*",
+          "public/*",
+          "*.json",
+          "*.js"
         ],
         "env": {
           "mocha": true
