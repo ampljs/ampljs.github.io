@@ -8,6 +8,7 @@
     "build:lib": "vue-cli-service build --target lib --name ampljs",
     "test:unit": "vue-cli-service test:unit",
     "test:component": "vue-cli-service test:unit ./tests/component/*.spec.js",
+    "test:e2e": "test:e2e ./tests/e2e/*.spec.js --coverage",
     "lint": "vue-cli-service lint",
     "deploy": "node scripts/gh-pages-deploy.js"
   },
