@@ -12,14 +12,15 @@
               :items="params"
               hint="Parâmetros fixos não podem ser selecionados"
               chips
+              deletable-chips
               multiple
               label="Selecione os parâmetros que deseja flexibilizar"
               item-text="name"
+              eager
               item-value="name"
               no-data-text="Sem parâmetros para selecionar"
               persistent-hint
-            >
-            </v-autocomplete>
+            />
           </v-col>
      
     </div>
