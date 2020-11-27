@@ -3,431 +3,188 @@ import { createLocalVue, mount } from '@vue/test-utils'
 import Vuetify from "vuetify"
 import Vue from "vue"
 //import { functions } from "../../src/plugins/ampljs/ampl";
-import IndicatorDialog from "../../src/components/Indicador"
+import SelectParameter from "../../src/components/ParametroUnico"
+
 
 Vue.use(Vuetify)
 
-describe('show all available indicators in dialog', function () {
-   let component;
-   let localVue;
-   let vuetify;
-   beforeEach(() => {
-      localVue = createLocalVue();
-      vuetify = new Vuetify()
-      global.requestAnimationFrame = cb => cb()
+describe('show all available parameters in dialog', function () {
+    let component;
+    let localVue;
+    let vuetify;
+    beforeEach(() => {
+        localVue = createLocalVue();
+        vuetify = new Vuetify()
+        global.requestAnimationFrame = cb => cb()
+        const el = document.createElement('div')
+        el.setAttribute('data-app', true)
+        document.body.appendChild(el)
+    })
+    context('dont has parameters in list', () => {
+        it('should be empty', async () => {
+            component = mount(SelectParameter, {
+                localVue, vuetify, propsData: {
+                    params: []
+                }
+            })
 
-   })
-   context('dont has indicators in list', () => {
-      it('should be empty', async () => {
-         component = mount(IndicatorDialog, {
-            localVue, vuetify, propsData: {
-               indicators: {}
-            }
-         })
+            await component.find('div.v-select__slot').trigger('click')
+            await component.vm.$nextTick();
 
-         component.find('div.v-select__slot').trigger('click')
-         await component.vm.$nextTick();
 
-         expect(component.find('div.v-list-item__title').text()).to.equal('Nenhum indicador disponível')
-      })
-   })
+            expect(component.find('div.v-list-item__title').text()).to.equal('Sem parâmetros para selecionar')
+        })
+    })
 
-   context('has one indicator', () => {
-      it('should not be empty', async () => {
-         component = mount(IndicatorDialog, {
-            localVue, vuetify, propsData: {
-               indicators: {i1: indicators['i1']}
-            }
-         })
+    context('has only fixed parameters', () => {
+        it('should be empty', async () => {
+            component = mount(SelectParameter, {
+                localVue, vuetify, propsData: {
+                    params: Object.entries(parameters["systemParameters"])
+                        .map((e) => ({
+                            name: e[0],
+                            ...e[1],
+                            disabled: true//e[1].min === e[1].max,
+                        }))
+                        .filter((e) => !e.disabled)
+                }
+            })
 
-         component.find('div.v-select__slot').trigger('click')
-         await component.vm.$nextTick();
+            component.find('div.v-select__slot').trigger('click')
+            await component.vm.$nextTick();
 
-         expect(component.find('div.v-list-item').text()).to.equal(indicators['i1'].name)
-      })
-   })
+            expect(component.find('div.v-list-item__title').text()).to.equal('Sem parâmetros para selecionar')
+        })
+    })
 
-   context('has many indicators', function ()  {
-      it(`should show all indicators`, async function() {
-         component = mount(IndicatorDialog, {
-            localVue, vuetify, propsData: {indicators}
-         })
+    context('has fixed and optimized parameters', function () {
+        it(`should show only optimized parameters`, async function () {
+            component = mount(SelectParameter, {
+                localVue, vuetify, propsData: {
+                    params: Object.entries(parameters["systemParameters"])
+                        .map((e) => ({
+                            name: e[0],
+                            ...e[1],
+                            disabled: e[1].min === e[1].max,
+                        }))
+                        .filter((e) => !e.disabled)
+                }
+            })
 
-         component.findAll('div.v-select__slot').trigger('click')
-         await component.vm.$nextTick();
+            component.find('div.v-select__slot').trigger('click')
+            await component.vm.$nextTick();
 
-         expect(component.findAll('div.v-list-item').length).to.equal(Object.keys(indicators).length)
-      })
-   })
+            expect(component.findAll('div.v-list-item').length).to.equal(Object.entries(parameters["systemParameters"])
+                .map((e) => ({
+                    name: e[0],
+                    ...e[1],
+                    disabled: e[1].min === e[1].max,
+                }))
+                .filter((e) => !e.disabled).length)
+        })
+    })
+
+    context('select couple parameters on list', function () {
+        it(`should show all selected parameters`, async function () {
+            component = mount(SelectParameter, {
+                localVue, vuetify, propsData: {
+                    params: Object.entries(parameters["systemParameters"])
+                        .map((e) => ({
+                            name: e[0],
+                            ...e[1],
+                            disabled: e[1].min === e[1].max,
+                        }))
+                        .filter((e) => !e.disabled)
+                }
+            })
+
+            component.find('div.v-select__slot').trigger('click')
+            await component.vm.$nextTick()
+            component.findAll('div.v-list-item').at(0).trigger('click')     //AGUAS
+            component.findAll('div.v-list-item').at(3).trigger('click')     //DIAGNOSE
+            component.findAll('div.v-list-item').at(5).trigger('click')     //NATALIDADE
+            await component.vm.$nextTick()
+
+            expect(component.findAll('span.v-chip__content').wrappers.map((e) => e.text())).to.be.an('array').to.have.members(['AGUAS', 'DIAGNOSE', 'NATALIDADE'])
+        })
+    })
+
+    context('select couple parameters on list and delete one after that', function () {
+        it(`should show all selected parameters except the deleted one`, async function () {
+            component = mount(SelectParameter, {
+                localVue, vuetify, propsData: {
+                    params: Object.entries(parameters["systemParameters"])
+                        .map((e) => ({
+                            name: e[0],
+                            ...e[1],
+                            disabled: e[1].min === e[1].max,
+                        }))
+                        .filter((e) => !e.disabled)
+                }
+            })
+
+            component.find('div.v-select__slot').trigger('click')
+            await component.vm.$nextTick()
+            component.findAll('div.v-list-item').at(0).trigger('click')     //AGUAS
+            component.findAll('div.v-list-item').at(3).trigger('click')     //DIAGNOSE
+            component.findAll('div.v-list-item').at(5).trigger('click')     //NATALIDADE
+            await component.vm.$nextTick()
+
+            component.findAll('button.v-chip__close').at(1).trigger('click')    //REMOVE DIAGNOSE
+            await component.vm.$nextTick()
+
+            expect(component.findAll('span.v-chip__content').wrappers.map((e) => e.text())).to.be.an('array').to.have.members(['AGUAS', 'NATALIDADE'])
+        })
+    })
 })
 
-const indicators = JSON.parse(`{
-    "i1": {
-       "name": "Preço de bovinos comprados, kg PV",
-       "description": "Preço médio do peso vivo de bovinos comprados.",
-       "unit": "R$/kgPV",
-       "group": "Compras",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "Output",
-             "property": "PESO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
+const parameters = {
+    "parameters": {
+        "AGUAS": 212,
+        "CICLO": 365,
+        "CONFINAMENTO": 110,
+        "DIAGNOSE": 59,
+        "INICIO_AGUAS": 90,
+        "MONTA": 92,
+        "NATALIDADE": 0.80,
+        "PARTO_MACHO": 0.50,
+        "PERDAS": 0.01,
+        "PERDAS_CRIA": 0.03,
+        "PRECO#BEZERRAS": 890.0,
+        "PRECO#BEZERROS": 960.0,
+        "PRECO#BOIS_GORDOS": 9100.0,
+        "PRECO#MULTIPARAS": 5100.0,
+        "PRECO#MULTIPARAS_GORDAS": 5100.0,
+        "PRECO#MULTIPARAS_PARIDAS": 5900.0,
+        "PRECO#NULIPARAS_GORDAS": 4100.0,
+        "PRECO#PRIMIPARAS": 4400.0,
+        "PRECO#PRIMIPARAS_GORDAS": 4400.0,
+        "PRENHEZ": 0.90,
+        "PRODUCAO": 438,
+        "PUERPERIO": 30
     },
-    "i2": {
-       "name": "Preço de bovinos vendidos, kg PV",
-       "description": "Preço médio do peso vivo de bovinos vendidos.",
-       "unit": "R$/kgPV",
-       "group": "Compras",
-       "terms": {
-          "N1": {
-             "method": "Input",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "Input",
-             "property": "PESO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i3": {
-       "name": "Custo total",
-       "description": "Custo total.",
-       "unit": "R$",
-       "group": "Econômicos",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ]
-          }
-       }
-    },
-    "i4": {
-       "name": "Receita total",
-       "description": "Receita total.",
-       "unit": "R$",
-       "group": "Econômicos",
-       "terms": {
-          "N1": {
-             "method": "Input",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ]
-          }
-       }
-    },
-    "i5": {
-       "name": "Rebanho, cab",
-       "description": "Rebanho bovino total em cabeças.",
-       "unit": "cab",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i6": {
-       "name": "Rebanho, kg PV",
-       "description": "Rebanho bovino total em kg de peso vivo.",
-       "unit": "kgPV",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "property": "PESO",
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i7": {
-       "name": "Nulíparas",
-       "description": "Qtde de Nulíparas, média no ano.",
-       "unit": "cab",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "categories": [
-                "NULIPARAS"
-             ]
-          }
-       }
-    },
-    "i8": {
-       "name": "Primíparas",
-       "description": "Qtde de Primíparas, média no ano.",
-       "unit": "cab",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "categories": [
-                "PRIMIPARAS"
-             ]
-          }
-       }
-    },
-    "i9": {
-       "name": "Multíparas",
-       "description": "Qtde de Multíparas, média no ano.",
-       "unit": "cab",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "categories": [
-                "MULTIPARAS"
-             ]
-          }
-       }
-    },
-    "i10": {
-       "name": "Matrizes",
-       "description": "Qtde de Matrizes, média no ano.",
-       "unit": "cab",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "categories": [
-                "NULIPARAS",
-                "PRIMIPARAS",
-                "MULTIPARAS"
-             ]
-          }
-       }
-    },
-    "i11": {
-       "name": "Desfrute",
-       "description": "Qtde de animais vendidos no ano subtraída dos animais comprados no ano dividido pelo rebanho médio, em cabeças.",
-       "unit": "%cab",
-       "group": "Produção",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "N2": {
-             "method": "Input",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i12": {
-       "name": "Desfrute",
-       "description": "Peso dos animais vendidos no ano subtraído dos animais comprados no ano dividido pelo rebanho médio, em kg.",
-       "unit": "%kg",
-       "group": "Produção",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "property": "PESO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "N2": {
-             "method": "Input",
-             "property": "PESO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "Stock",
-             "property": "PESO",
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i13": {
-       "name": "Desfrute",
-       "description": "Valor dos animais vendidos no ano subtraído dos animais comprados no ano dividido pelo valor médio do rebanho.",
-       "unit": "%kg",
-       "group": "Produção",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "N2": {
-             "method": "Input",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "property": "PRECO",
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i14": {
-       "name": "CO2eq",
-       "description": "Emissões de gases de efeito estufa totais do 'berço ao portão'.",
-       "unit": "kg CO2eq",
-       "group": "Emissões",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "categories": [
-                "GEE"
-             ]
-          },
-          "N2": {
-             "method": "Output",
-             "property": "CO2EQ",
-             "stages": [
-                "terminal"
-             ]
-          }
-       }
-    },
-    "i15": {
-       "name": "Preço de bovinos comprados, @",
-       "description": "Preço médio da arroba de bovinos comprados.",
-       "unit": "R$/@",
-       "group": "Compras",
-       "terms": {
-          "N1": {
-             "method": "Output",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "Output",
-             "property": "ARROBA",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i16": {
-       "name": "Preço de bovinos vendidos, @",
-       "description": "Preço médio da arroba de bovinos vendidos.",
-       "unit": "R$/@",
-       "group": "Compras",
-       "terms": {
-          "N1": {
-             "method": "Input",
-             "property": "PRECO",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "Input",
-             "property": "ARROBA",
-             "stages": [
-                "terminal"
-             ],
-             "categories": [
-                "BOVINOS"
-             ]
-          }
-       }
-    },
-    "i17": {
-       "name": "Taxa de Lotação",
-       "description": "Taxa de lotação em kg de peso vivo por ha.",
-       "unit": "kgPV/ha",
-       "group": "Rebanho",
-       "terms": {
-          "N1": {
-             "method": "Stock",
-             "property": "PESO",
-             "categories": [
-                "BOVINOS"
-             ]
-          },
-          "D1": {
-             "method": "AREA_PRODUCAO"
-          }
-       }
+    "systemParameters": {
+        "AGUAS": { "min": 200, "std": 212, "max": 220 }, /* Duração da estação das águas em dias */
+        "CICLO": { "min": 365, "std": 365, "max": 365 }, /* Duração do ciclo anual, em dias */
+        "CONFINAMENTO": { "min": 100, "std": 110, "max": 120 }, /* Duração do confinamento, em dias */
+        "INICIO_AGUAS": { "min": 80, "std": 90, "max": 100 }, /* Dias desde o início do ciclo para o início da estação das águas, em dias */
+        "DIAGNOSE": { "min": 30, "std": 60, "max": 90 }, /* Duração da diagnose de prenhez, em dias */
+        "PARTO_MACHO": { "min": 0.5, "std": 0.5, "max": 0.5 }, /* Quantidade de machos por parto bem sucedido, em fração */
+        "MONTA": { "min": 60, "std": 90, "max": 120 }, /* Duração da monta, em dias */
+        "NATALIDADE": { "min": 0.50, "std": 0.80, "max": 1.00 }, /* Taxa de natalidade, em fração */
+        "PERDAS": { "min": 0.01, "std": 0.03, "max": 0.05 }, /* Perdas de animais adultos, em fração de cabeças por ciclo anual */
+        "PERDAS_CRIA": { "min": 0.03, "std": 0.05, "max": 0.10 }, /* Perdas de bezerros ou bezerras antes da desmama, em fração de cabeças por ciclo anual */
+        "PRECO#BEZERRAS": { "min": 800.0, "std": 900.0, "max": 1000.0 }, /* Preço, em R$/cab */
+        "PRECO#BEZERROS": { "min": 850.0, "std": 950.0, "max": 1100.0 }, /* Preço, em R$/cab */
+        "PRECO#BOIS_GORDOS": { "min": 7000.0, "std": 9000.0, "max": 10000.0 }, /* Preço, em R$/cab */
+        "PRECO#MULTIPARAS": { "min": 4000.0, "std": 5000.0, "max": 6000.0 }, /* Preço, em R$/cab */
+        "PRECO#MULTIPARAS_GORDAS": { "min": 4000.0, "std": 5000.0, "max": 6000.0 }, /* Preço, em R$/cab */
+        "PRECO#MULTIPARAS_PARIDAS": { "min": 5000.0, "std": 6000.0, "max": 7000.0 }, /* Preço, em R$/cab */
+        "PRECO#NULIPARAS_GORDAS": { "min": 3000.0, "std": 4000.0, "max": 5000.0 }, /* Preço, em R$/cab */
+        "PRECO#PRIMIPARAS": { "min": 3500.0, "std": 4500.0, "max": 5500.0 }, /* Preço, em R$/cab */
+        "PRECO#PRIMIPARAS_GORDAS": { "min": 3500.0, "std": 4500.0, "max": 5500.0 }, /* Preço, em R$/cab */
+        "PRENHEZ": { "min": 0.50, "std": 0.80, "max": 1.00 }, /* Taxa de prenhez, em fração */
+        "PRODUCAO": { "min": 300, "std": 400, "max": 500 }, /* Produção principal, em cabeças */
+        "PUERPERIO": { "min": 25, "std": 30, "max": 40 } /* Duração do puerpério, em dias */
     }
- }`)
+}
