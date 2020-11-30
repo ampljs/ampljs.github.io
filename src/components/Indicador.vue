@@ -8,6 +8,7 @@
       item-value="id"
       required
       persistent-hint
+      solo
       return-object
       no-data-text="Nenhum indicador disponível"
     >
@@ -18,20 +19,25 @@
 <script>
 import Vue from "vue";
 
-export default Vue.component('Indicador', {
+export default Vue.component("Indicador", {
   props: ["indicators"],
   data: () => ({
-      value: null
+    value: null,
   }),
-  computed:{
-    indicatorsList: function(){
-      return Object.entries(this.indicators).map((e) => ({ id: e[0], ...e[1] }))
-    }
+  computed: {
+    indicatorsList: function () {
+      if (this.indicators != null)
+        return Object.entries(this.indicators).map((e) => ({
+          id: e[0],
+          ...e[1],
+        }));
+      else return [];
+    },
   },
-  methods:{
-    updateIndicator:function (value) {
-      this.$emit('updateIndicator', value)
-    }
-  }
-})
+  methods: {
+    updateIndicator: function (value) {
+      this.$emit("updateIndicator", value);
+    },
+  },
+});
 </script>

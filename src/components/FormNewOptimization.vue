@@ -15,6 +15,7 @@
             <!-- COMPONENTE PARA SELEÇÃO DO INDICADOR -->
             <Indicador
               :indicators="indicators"
+              :key="jsonIndicators"
               @updateIndicator="selectedIndicator = $event"
             />
           </v-col>
@@ -28,6 +29,7 @@
             <h4>Parâmetros</h4>
             <!-- COMPONENTE PARA SELEÇÃO DO PARÂMETRO -->
             <Parametro
+            :key="jsonSimulation"
               :params="params"
               @addParam="selectedParameters = $event"
             />
@@ -64,7 +66,10 @@ export default Vue.component("FormNewOptimization", {
   methods: {
     validateForm: function () {},
     graph: function () {
-      return AMPLJS.getGraph();
+      return {
+        graph: AMPLJS.getGraph(),
+        ampljs: AMPLJS
+      };
     },
     generate: function () {
       //const indicatorsJSON = JSON.stringify(this.indicators);
@@ -100,8 +105,9 @@ export default Vue.component("FormNewOptimization", {
   computed: {
     params: function () {
       const simulation = JSON.parse(
-        AMPLJS.getGraph().removeComments(this.jsonSimulation)
+        AMPLJS.getGraph().removeComments(this.jsonSimulation || '{}')
       );
+      if(simulation['simulationData'] != undefined)
       return Object.entries(simulation["simulationData"]["systemParameters"])
         .map((e) => ({
           name: e[0],
@@ -109,9 +115,12 @@ export default Vue.component("FormNewOptimization", {
           disabled: e[1].min === e[1].max,
         }))
         .filter((e) => !e.disabled);
+        else return []
     },
     indicators: function () {
-      return JSON.parse(this.jsonIndicators);
+      if(typeof this.jsonIndicators === 'string' && this.jsonIndicators.length > 0)
+        return JSON.parse(this.jsonIndicators);
+      else return {};
     },
   },
   data: () => ({

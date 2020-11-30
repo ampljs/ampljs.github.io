@@ -15,7 +15,7 @@ describe('check if char is invalid', function() {
         })
     })
 
-    context('passing one char and a list of invalid chars who dont contain that char', () => {
+    context('passing one valid char and a list of invalid chars', () => {
         it('should be false', () => {
             expect(functions.isInvalidChar('a', ['', ' ', ',', '\n'])).to.false
         })
