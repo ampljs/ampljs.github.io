@@ -22,7 +22,7 @@ const AMPLJS = (function () {
         return false;
       }
     },
-    getGraph: () => {
+    getGraph: function (){
       return {
         nodes: _nodes,
         flows: _flows,
@@ -333,11 +333,9 @@ const AMPLJS = (function () {
       return '';
     },
     translate: (jSimulation, jUser, jIndicators) => {
-      //console.log(removeComments(jSimulation))
-      //console.log(jUser)
-      //console.log(jIndicators)
-
-      //_.getCodebase();
+      jSimulation = jSimulation || JSON.stringify(modelJSONObject)
+      jUser = jUser || JSON.stringify(userJSONObject)
+      jIndicators = jIndicators || jsonIndicators
       var jsonSimulation = removeComments(jSimulation);
       var jsonUser = removeComments(jUser)
       jsonIndicators = removeComments(jIndicators)

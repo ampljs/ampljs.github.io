@@ -1,18 +1,15 @@
 <template>
-    <div class="parametros">
-
-        
-          
+    <div class="parametros">          
           <v-col cols="12" >         
 
             <!-- ADICIONANDO SELECT MULTIPLO -->
-            <!-- Inicio do autocomplete -->
-            <v-autocomplete
+            <v-select
               v-on:change="addParam($event)"
               :items="params"
               hint="Parâmetros fixos não podem ser selecionados"
               chips
               deletable-chips
+              solo
               multiple
               label="Selecione os parâmetros que deseja flexibilizar"
               item-text="name"

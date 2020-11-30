@@ -8,6 +8,7 @@
       item-value="id"
       required
       persistent-hint
+      solo
       return-object
       no-data-text="Nenhum indicador disponível"
     >

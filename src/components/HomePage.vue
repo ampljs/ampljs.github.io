@@ -1,5 +1,5 @@
 <template>
-  <v-content>
+  <v-main>
     <v-row>
       <v-col cols="6" >
           <v-textarea class="d-flex justify-space-between align-center" outlined rows="25" v-model="jsonSimulation" label="JSON SIMULAÇÃO" full-width/>
@@ -12,7 +12,7 @@
         <ModalIndicator :jsonIndicators="jsonIndicators" :jsonSimulation="jsonSimulation"/>
       </div>
     
-  </v-content>
+  </v-main>
 </template>
 <script>
 import ModalIndicator from "./FormIndicator";

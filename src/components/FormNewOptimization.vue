@@ -66,7 +66,10 @@ export default Vue.component("FormNewOptimization", {
   methods: {
     validateForm: function () {},
     graph: function () {
-      return AMPLJS.getGraph();
+      return {
+        graph: AMPLJS.getGraph(),
+        ampljs: AMPLJS
+      };
     },
     generate: function () {
       //const indicatorsJSON = JSON.stringify(this.indicators);
