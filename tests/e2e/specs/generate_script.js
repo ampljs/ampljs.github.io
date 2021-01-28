@@ -64,7 +64,7 @@ module.exports = {
     'click generate button and check generated script': (browser) => {
       browser.click('button.success')
       browser.getAttribute('a', 'href', function(url){
-        browser.url(url, function(result){
+        browser.url(url, function(){
           browser.expect.element('body').text.to.equal(testing_script)
         })
         
