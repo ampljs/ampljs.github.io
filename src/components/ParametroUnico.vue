@@ -6,7 +6,7 @@
             <v-select
               v-on:change="addParam($event)"
               :items="params"
-              hint="Parâmetros fixos não podem ser selecionados"
+              hint="A lista de Parâmetros possui apenas os Parâmetros utilizados no cálculo do indicador selecionado"
               chips
               deletable-chips
               solo
