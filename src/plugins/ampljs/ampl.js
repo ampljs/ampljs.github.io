@@ -436,7 +436,7 @@ const AMPLJS = (function () {
       if (_flows != undefined) {
         let i = 0;
 
-        for (let f in _flows) str += `\n${_flows[f].bottom.type === 'balance' || _flows[f].bottom.type === 'sum' ? '#' : ''}subject to Factor${i++}: factor['${_flows[f].toStringName("', '")}'] = ${_flows[f].toStringFormulaWithResults(AMPLJS.getGraph().parameters)};`;
+        for (let f in _flows) str += _flows[f].bottom.type === 'balance' || _flows[f].bottom.type === 'sum' ? `\nsubject to Factor${i++}: factor['${_flows[f].toStringName("', '")}'] = ${_flows[f].toStringFormulaWithResults(AMPLJS.getGraph().parameters)};` : '';
 
 
         return str;
@@ -515,7 +515,7 @@ class Node {
     this.type = type;
     this.stage = stage;
     this.duration = duration;
-    this.formula = formula;
+    this.formula = replacePropertySeparator(formula);
     this.flows = flows;
   }
   toStringType = (type) => type == this.type ? `\n\t${this.name}\t1,` : ''
@@ -541,7 +541,7 @@ class Flow {
     this.qty = qty;
     this.day = day;
     this.resource = resource;
-    this.formula = formula;
+    this.formula = replacePropertySeparator(formula);
   }
 
   toStringSign = () => `\n\t${this.toStringName(' ')}, ${this.type == 'PROD' ? -1 : 1}`     //1 se type = treatment, -1 de type = production
@@ -560,13 +560,13 @@ class Parameter {
       /*String */formula
 
   constructor(name, category, std, min, max, val, formula) {
-    this.name = name;
+    this.name = replacePropertySeparator(name);
     this.category = max == min ? 'fixed' : category;
     this.std = std;
     this.min = min;
     this.max = max;
     this.val = val;
-    this.formula = formula;
+    this.formula = replacePropertySeparator(formula);
   }
 
   toStringByCat = (category) => this.category == category ? `\n\t${this.toStringName()}\t${this.val},` : ``
@@ -770,6 +770,7 @@ function getTopAndBottomNodesOfFlow(flowString, _nodes) {
 
 }
 
+const replacePropertySeparator = (name = '') => name.length > 0 ? name.replace(/#/g, conector) : ''
 const conector = '_cerquilha_'
 
 const defaultMethods = {
