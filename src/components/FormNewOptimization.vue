@@ -29,7 +29,7 @@
             <h4>Parâmetros</h4>
             <!-- COMPONENTE PARA SELEÇÃO DO PARÂMETRO -->
             <Parametro
-            :key="jsonSimulation"
+              :key="jsonSimulation"
               :params="params"
               @addParam="selectedParameters = $event"
             />
@@ -60,7 +60,8 @@ import MaximizeIndicator from "./MaximizeIndicator";
 import AMPL from "../plugins/ampljs/ampl";
 const AMPLJS = AMPL.ampljs;
 
-export default Vue.component("FormNewOptimization", {
+export default Vue.component("form-mais-precoce-ampl", {
+  name: "form-mais-precoce-ampl",
   components: { Indicador, Parametro, MaximizeIndicator },
   props: ["jsonSimulation", "jsonIndicators"],
   methods: {
@@ -68,7 +69,7 @@ export default Vue.component("FormNewOptimization", {
     graph: function () {
       return {
         graph: AMPLJS.getGraph(),
-        ampljs: AMPLJS
+        ampljs: AMPLJS,
       };
     },
     generate: function () {
@@ -105,20 +106,31 @@ export default Vue.component("FormNewOptimization", {
   computed: {
     params: function () {
       const simulation = JSON.parse(
-        AMPLJS.getGraph().removeComments(this.jsonSimulation || '{}')
+        AMPLJS.getGraph().removeComments(this.jsonSimulation || "{}")
       );
-      if(simulation['simulationData'] != undefined)
-      return Object.entries(simulation["simulationData"]["systemParameters"])
-        .map((e) => ({
-          name: e[0],
-          ...e[1],
-          disabled: e[1].min === e[1].max,
-        }))
-        .filter((e) => !e.disabled);
-        else return []
+      console.log(simulation);
+      if (simulation["simulationData"] != undefined)
+        return Object.entries(simulation["simulationData"]["parameters"])
+          .filter((e) =>
+            byFixedParameter(
+              e,
+              simulation["simulationData"]["systemParameters"]
+            )
+          )
+          .filter((e) =>
+            byIndicatorParameter(e, simulation, this.selectedIndicator)
+          )
+          .map((e) => ({
+            name: e[0],
+            ...e[1],
+          }));
+      else return [];
     },
     indicators: function () {
-      if(typeof this.jsonIndicators === 'string' && this.jsonIndicators.length > 0)
+      if (
+        typeof this.jsonIndicators === "string" &&
+        this.jsonIndicators.length > 0
+      )
         return JSON.parse(this.jsonIndicators);
       else return {};
     },
@@ -134,6 +146,24 @@ export default Vue.component("FormNewOptimization", {
     //lista de indicadores
   }),
 });
+
+const byFixedParameter = (e, systemParameters) =>
+  typeof e[0] === "string" &&
+  systemParameters[e[0]].min != systemParameters[e[0]].max;
+const byIndicatorParameter = (e, simulation = {}, selectedIndicator = {}) =>
+  typeof e[0] === "string" &&
+  selectedIndicator != null &&
+  selectedIndicator["name"] in
+    simulation["simulationData"]["indicatorParameters"] &&
+  parameterIsNecessary(e, [
+    ...simulation["simulationData"]["indicatorParameters"][
+      selectedIndicator["name"]
+    ]["default"],
+    ...simulation["simulationData"]["indicatorParameters"][
+      selectedIndicator["name"]
+    ]["other"],
+  ]);
+const parameterIsNecessary = (e, p) => Array.isArray(p) && p.includes(e[0]);
 </script>
 
 <style scoped>
