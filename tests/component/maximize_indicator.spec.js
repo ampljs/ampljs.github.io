@@ -30,8 +30,6 @@ describe('show options to maximize or minimize the selected indicator', function
          component.find('button[value="maximize"]').trigger('click')
          await component.vm.$nextTick();
 
-         console.log(component.emitted())
-
          expect(component.emitted().updateObjective).to.be.an('array').to.have.lengthOf(1)
       })
    })
