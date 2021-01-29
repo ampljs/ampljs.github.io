@@ -4697,7 +4697,7 @@ var script$3 = Vue.component("form-mais-precoce-ampl", {
     VContainer: VContainer,
     VForm: VForm
   },
-  props: ["jsonSimulation", "jsonIndicators"],
+  props: ["jsonSimulation", "jsonIndicators", "simulationName", "resultFileName", 'onGenerate'],
   methods: {
     validateForm: function () {},
     graph: function () {
@@ -4723,13 +4723,15 @@ var script$3 = Vue.component("form-mais-precoce-ampl", {
         this.forceFileDownload(script);
       }
 
+      if(typeof this.onGenerate === 'function') this.onGenerate();
+
       this.isGenerateButtonLoading = false;
     },
     forceFileDownload: function (file) {
       const url = window.URL.createObjectURL(new Blob([file]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "simulation.mod"); //or any other extension
+      link.setAttribute("download", `${typeof this.resultFileName === 'string' ? this.resultFileName : 'simulation'}.mod`); //or any other extension
       document.body.appendChild(link);
       link.click();
     },
@@ -4774,9 +4776,6 @@ var script$3 = Vue.component("form-mais-precoce-ampl", {
     selectedIndicator: null,
     selectedParameters: null,
     objective: "maximize",
-    simulation: {
-      name: "Simulação realizada 1",
-    },
     //lista de indicadores
   }),
 });
@@ -4821,7 +4820,7 @@ var __vue_render__$3 = function() {
                 "v-row",
                 [
                   _c("v-col", { attrs: { cols: "12" } }, [
-                    _c("h1", [_vm._v(_vm._s(_vm.simulation.name))])
+                    _c("h1", [_vm._v(_vm._s(_vm.simulationName))])
                   ])
                 ],
                 1
@@ -4947,11 +4946,11 @@ __vue_render__$3._withStripped = true;
   /* style */
   const __vue_inject_styles__$3 = function (inject) {
     if (!inject) return
-    inject("data-v-1df19ea4_0", { source: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", map: {"version":3,"sources":[],"names":[],"mappings":"","file":"FormNewOptimization.vue"}, media: undefined });
+    inject("data-v-6ac7dcbd_0", { source: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", map: {"version":3,"sources":[],"names":[],"mappings":"","file":"FormNewOptimization.vue"}, media: undefined });
 
   };
   /* scoped */
-  const __vue_scope_id__$3 = "data-v-1df19ea4";
+  const __vue_scope_id__$3 = "data-v-6ac7dcbd";
   /* module identifier */
   const __vue_module_identifier__$3 = undefined;
   /* functional template */
