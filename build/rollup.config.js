@@ -1,6 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs'; // Converte módulos CommonJS para ES6
 import vue from 'rollup-plugin-vue'; // Manipula arquivos .vue
 import babel from "rollup-plugin-babel"
+import vuetify from "rollup-plugin-vuetify"
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 export default {
   input: 'src/wrapper.js', // Caminho relativo ao package.json
@@ -11,6 +12,7 @@ export default {
         'form-mais-precoce-ampl': 'FormNewOptimization'
     }
   },
+  external: ["vue", "vuetify/lib"],
   plugins: [
     commonjs(),
     nodeResolve(),
@@ -25,5 +27,6 @@ export default {
       plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-syntax-class-properties'],
       //presets: [['env', { modules: false }]],
     }),
+    vuetify()
   ],
 };
