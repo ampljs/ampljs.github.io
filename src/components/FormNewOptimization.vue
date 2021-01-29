@@ -56,7 +56,7 @@
 import Indicador from "./Indicador.vue";
 import Vue from "vue";
 import Parametro from "./ParametroUnico.vue";
-import MaximizeIndicator from "./MaximizeIndicator";
+import MaximizeIndicator from "./MaximizeIndicator.vue";
 import AMPL from "../plugins/ampljs/ampl";
 const AMPLJS = AMPL.ampljs;
 

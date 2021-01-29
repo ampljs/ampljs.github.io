@@ -9,13 +9,13 @@
 </template>
 
 <script>
-import HomePage from "./components/HomePage"
+import FormMaisPrecoceAmpl from "./components/FormNewOptimization.vue"
 
 export default {
-  name: 'App',
+  name: 'form-mais-precoce-ampl',
 
   components: {
-    HomePage,
+    FormMaisPrecoceAmpl,
   },
 
   data: () => ({

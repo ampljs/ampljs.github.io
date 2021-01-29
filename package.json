@@ -1,16 +1,23 @@
 {
   "name": "mais-precoce-ampl",
   "version": "0.9.0",
+  "main": "dist/ampl.umd.js",
+  "module": "dist/ampl.esm.js",
+  "unpkg": "dist/ampl.min.js",
+  "browser": {
+    "./sfc": "src/component/FormNewOptimization.vue"
+  },
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
     "serve:coverage": "npm run serve --mode test",
-    "build": "vue-cli-service build",
+    "build": "npm run build:umd & npm run build:es & npm run build:unpkg",
+    "build:umd": "rollup --config build/rollup.config.js --format umd --file dist/ampl.umd.js",
+    "build:es": "rollup --config build/rollup.config.js --format es --file dist/ampl.esm.js",
+    "build:unpkg": "rollup --config build/rollup.config.js --format iife --file dist/ampl.min.js",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint",
     "deploy": "node scripts/gh-pages-deploy.js",
-    "build:lib": "vue-cli-service build --target lib --name ampljs",
     "test:component": "vue-cli-service test:unit ./tests/component/*.spec.js"
   },
   "dependencies": {
@@ -24,6 +31,9 @@
   "devDependencies": {
     "@mdi/font": "^5.8.55",
     "@mdi/js": "^5.8.55",
+    "@rollup/plugin-buble": "^0.21.3",
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.1.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-e2e-nightwatch": "^4.5.9",
     "@vue/cli-plugin-eslint": "~4.5.0",
@@ -32,6 +42,8 @@
     "@vue/test-utils": "^1.0.3",
     "babel-eslint": "^10.1.0",
     "babel-plugin-istanbul": "^6.0.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
     "chai": "^4.2.0",
     "chromedriver": "86",
     "eslint": "^6.7.2",
@@ -39,6 +51,9 @@
     "execa": "^5.0.0",
     "geckodriver": "^1.20.0",
     "mocha": "^8.2.1",
+    "rollup": "^2.30.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-vue": "^5.0.1",
     "sass": "^1.19.0",
     "sass-loader": "^8.0.0",
     "sinon": "^9.2.1",
