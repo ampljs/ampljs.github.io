@@ -14,25 +14,52 @@ height: 600.
 
 ## Configuração do projeto
 
-O projeto deverá ser introduzido
+O projeto deverá ser introduzido via git, inserindo a seguinte linha no package.json do projeto principal.
 ```
-npm install
+dependencies:{
+    /*...*/
+    "ampl": "git+https://git.cnpgc.embrapa.br/mais-precoce/ampl.git"
+    /*...*/
+}
+
 ```
 
-### Compiles and hot-reloads for development
+Feito isso, para utilizar o componente basta importá-lo:
+
 ```
-npm run serve
+<template>
+  <FormMaisPrecoceAmpl></FormMaisPrecoceAmpl>
+</template>
+import FormMaisPrecoceAmpl from "ampl";
+  export default {
+    name: 'HelloWorld',
+    components:{FormMaisPrecoceAmpl},
+
+    data: () => ({
+     
+    }),
+  }
 ```
 
-### Compiles and minifies for production
+### Propriedades
+| Nome           | Tipo     | Obrigatório? | Descrição                                                                                                                                                                        |
+|----------------|----------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| jsonSimulation | String   | Sim          | JSON contendo a simulação realizada e que deverá ser otimizada.                                                                                                                  |
+| jsonIndicators | String   | Sim          | JSON contendo as informações de todos os indicadores da P+P.                                                                                                                     |
+| simulationName | String   | Sim          | Nome da simulação, que será exibido no topo do formulário                                                                                                                        |
+| resultFileName | String   | Não          | Nome do arquivo contendo o script gerado, que será disponibilizado ao usuário para download, o nome terá a extensão .mod, caso não seja informado o nome padrão será simulation. |
+| onGenerate     | Function | Não          | Função que será executada ao finalizar a geração do arquivo, pode ser para exibir uma informação em tela ou retornar à tela anterior.                                            |
+
+### Dependências
+Dependências de ambiente:
 ```
-npm run build
+node: 10.9.0+
+npm: 6.13.4+
 ```
 
-### Lints and fixes files
+Dependências de projeto:
 ```
-npm run lint
+"vue": 2.6.11+
+"vuetify": 2.4.0+
+"vuetify-loader": 1.7.0+
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
