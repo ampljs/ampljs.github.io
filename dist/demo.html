@@ -1,0 +1,19 @@
+<meta charset="utf-8">
+<title>ampl demo</title>
+<script src="https://unpkg.com/vue"></script>
+<script src="./ampl.umd.js"></script>
+
+<link rel="stylesheet" href="./ampl.css">
+
+
+<div id="app">
+  <demo></demo>
+</div>
+
+<script>
+new Vue({
+  components: {
+    demo: ampl
+  }
+}).$mount('#app')
+</script>
