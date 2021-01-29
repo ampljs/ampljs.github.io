@@ -21,16 +21,22 @@
     "test:component": "vue-cli-service test:unit ./tests/component/*.spec.js"
   },
   "dependencies": {
+    "@babel/runtime": "^7.12.5",
     "circular-dependency-plugin": "^5.2.2",
     "core-js": "^3.6.5",
     "mathjs": "^8.0.1",
     "vue": "^2.6.11",
     "vue-mathjs": "^0.1.1",
-    "vuetify": "^2.2.11"
+    "vuetify": "^2.4.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-transform-runtime": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
     "@mdi/font": "^5.8.55",
     "@mdi/js": "^5.8.55",
+    "@rollup/plugin-babel": "^5.2.3",
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.1.0",
@@ -40,10 +46,6 @@
     "@vue/cli-plugin-unit-mocha": "^4.5.9",
     "@vue/cli-service": "~4.5.0",
     "@vue/test-utils": "^1.0.3",
-    "babel-eslint": "^10.1.0",
-    "babel-plugin-istanbul": "^6.0.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
     "chai": "^4.2.0",
     "chromedriver": "86",
     "eslint": "^6.7.2",
@@ -52,7 +54,6 @@
     "geckodriver": "^1.20.0",
     "mocha": "^8.2.1",
     "rollup": "^2.30.0",
-    "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-vue": "^5.0.1",
     "rollup-plugin-vuetify": "^0.2.4",
     "sass": "^1.19.0",

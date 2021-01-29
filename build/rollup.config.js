@@ -1,6 +1,6 @@
 import commonjs from '@rollup/plugin-commonjs'; // Converte módulos CommonJS para ES6
 import vue from 'rollup-plugin-vue'; // Manipula arquivos .vue
-import babel from "rollup-plugin-babel"
+import babel from "@rollup/plugin-babel"
 import vuetify from "rollup-plugin-vuetify"
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 export default {
@@ -24,10 +24,10 @@ export default {
     }),
     babel({
       exclude: 'node_modules/**',
-      externalHelpersWhitelist: ['objectSpread'],
-      runtimeHelpers: true,
-      plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-syntax-class-properties'],
-      //presets: [['env', { modules: false }]],
+      //externalHelpersWhitelist: ['objectSpread'],
+      babelHelpers: 'runtime',
+      plugins: ["@babel/plugin-proposal-class-properties"],
+      presets: [['@babel/preset-env', { modules: false }]],
     }),
     vuetify()
   ],
