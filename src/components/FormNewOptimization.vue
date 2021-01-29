@@ -4,7 +4,7 @@
       <v-container>
         <v-row>
           <v-col cols="12">
-            <h1>{{ simulation.name }}</h1>
+            <h1>{{ simulationName }}</h1>
           </v-col>
         </v-row>
         <v-row>
@@ -63,7 +63,7 @@ const AMPLJS = AMPL.ampljs;
 export default Vue.component("form-mais-precoce-ampl", {
   name: "form-mais-precoce-ampl",
   components: { Indicador, Parametro, MaximizeIndicator },
-  props: ["jsonSimulation", "jsonIndicators"],
+  props: ["jsonSimulation", "jsonIndicators", "simulationName", "resultFileName", 'onGenerate'],
   methods: {
     validateForm: function () {},
     graph: function () {
@@ -89,13 +89,15 @@ export default Vue.component("form-mais-precoce-ampl", {
         this.forceFileDownload(script);
       }
 
+      if(typeof this.onGenerate === 'function') this.onGenerate();
+
       this.isGenerateButtonLoading = false;
     },
     forceFileDownload: function (file) {
       const url = window.URL.createObjectURL(new Blob([file]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "simulation.mod"); //or any other extension
+      link.setAttribute("download", `${typeof this.resultFileName === 'string' ? this.resultFileName : 'simulation'}.mod`); //or any other extension
       document.body.appendChild(link);
       link.click();
     },
@@ -140,9 +142,6 @@ export default Vue.component("form-mais-precoce-ampl", {
     selectedIndicator: null,
     selectedParameters: null,
     objective: "maximize",
-    simulation: {
-      name: "Simulação realizada 1",
-    },
     //lista de indicadores
   }),
 });
