@@ -1,4 +1,5 @@
 import FormMaisPrecoceAmpl from "./components/FormNewOptimization.vue"
+import Vuetify from "vuetify"
 // Declara a função de instalação executada pelo Vue.use()
 export function install(Vue) {
     if (install.installed) return;
@@ -19,6 +20,7 @@ export function install(Vue) {
     GlobalVue = global.Vue;
   }
   if (GlobalVue) {
+    GlobalVue.use(Vuetify);
     GlobalVue.use(plugin);
   }
   

@@ -9,7 +9,9 @@ export default {
     name: 'FormMaisPrecoceAmpl',
     exports: 'named',
     globals:{
-        'form-mais-precoce-ampl': 'FormNewOptimization'
+        'form-mais-precoce-ampl': 'FormNewOptimization',
+        "vue":"Vue",
+        "vuetify/lib": "Vuetify"
     }
   },
   external: ["vue", "vuetify/lib"],
